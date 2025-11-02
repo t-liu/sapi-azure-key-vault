@@ -70,7 +70,7 @@ jobs:
           bandit -r . -ll
 
       - name: Upload Bandit Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: bandit-security-report
@@ -116,7 +116,7 @@ jobs:
           name: codecov-umbrella
 
       - name: Upload HTML Coverage Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-report
@@ -149,7 +149,7 @@ jobs:
           cp -r app/ host.json requirements.txt .python_packages artifact/
 
       - name: Upload artifact for deployment
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: azure-function-app
           path: artifact/
@@ -221,7 +221,7 @@ jobs:
           ENVIRONMENT: staging
 
       - name: Upload Integration Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: integration-test-results
