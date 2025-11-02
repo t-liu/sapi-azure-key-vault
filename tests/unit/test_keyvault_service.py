@@ -211,7 +211,7 @@ class TestKeyVaultService:
         service = KeyVaultService()
         result = service.delete_properties("qa", "test-app")
 
-        assert result is True
+        assert result == 2
         assert mock_client.begin_delete_secret.call_count == 2
 
     @patch("app.keyvault_service.DefaultAzureCredential")
@@ -234,7 +234,7 @@ class TestKeyVaultService:
         result = service.delete_properties("qa", "test-app")
 
         # Should succeed despite the error
-        assert result is True
+        assert result == 0
 
     @patch("app.keyvault_service.DefaultAzureCredential")
     @patch("app.keyvault_service.SecretClient")
