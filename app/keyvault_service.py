@@ -17,7 +17,7 @@ from azure.core.exceptions import (
     HttpResponseError,
 )
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from app.constants import Config, LogMessages
+from app.constants import Config
 
 logger = logging.getLogger(__name__)
 
