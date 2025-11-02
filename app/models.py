@@ -63,7 +63,7 @@ class PropertyItem(BaseModel):
             # Azure Key Vault secret value limit
             if len(value) > Config.MAX_SECRET_VALUE_LENGTH:
                 raise ValueError(
-                    f"Property value too long for key '{key}' (max {Config.MAX_SECRET_VALUE_LENGTH // 1000}KB)"
+                    f"Property value too long for key '{key}' (max {Config.MAX_SECRET_VALUE_LENGTH // 1000}KB/{Config.MAX_SECRET_VALUE_LENGTH} characters)"
                 )
 
             # Property values cannot be empty
