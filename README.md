@@ -58,7 +58,7 @@ sapi-azure-key-vault/
 
 ## Prerequisites
 
-- Python 3.13 or higher
+- Python 3.12 or higher
 - Azure Functions Core Tools v4
 - Azure subscription with Key Vault
 - Azure CLI (for deployment)
@@ -468,7 +468,6 @@ View logs in:
 - **docs/4_CODE_REVIEW.md** - Senior staff engineer review (10/10 issues fixed)
 - **docs/5_SECURITY_IMPLEMENTATION.md** - Security implementation details
 - **docs/6_SECURITY_FIXES_SUMMARY.md** - Security, performance & code quality fixes
-- **docs/13_PYTHON_313_UPGRADE.md** - Python 3.13 upgrade summary
 
 ### CI/CD
 - **.github/workflows/README.md** - GitHub Actions setup guide
@@ -509,7 +508,7 @@ For issues or questions, contact the platform engineering team.
 ## Recent Updates
 
 ### November 2025 - Production Hardening
-- ✅ **Python 3.13 Upgrade**: Migrated from Python 3.9 (EOL) to 3.13
+- ✅ **Python 3.12 Upgrade**: Migrated from Python 3.9 (EOL) to 3.12
 - ✅ **Security Hardening**: 10 critical security fixes implemented
   - Timing-attack protection, rate limiting, information leakage prevention
   - Input validation, data integrity (base64url encoding)
@@ -528,6 +527,6 @@ For issues or questions, contact the platform engineering team.
 ---
 
 **Version**: 2.0.0  
-**Last Updated**: November 2025 (Python 3.13, Security Hardened)  
+**Last Updated**: November 2025 (Python 3.12, Security Hardened)  
 **Maintained by**: Platform Engineering Team  
 **Status**: ✅ **PRODUCTION READY**

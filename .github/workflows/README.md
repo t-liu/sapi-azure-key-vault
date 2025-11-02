@@ -28,19 +28,19 @@ Value: (same format as staging, different service principal)
 
 #### Test Credentials
 ```
-Name: TEST_CLIENT_ID
+Name: TEST_API_CLIENT_ID
 Value: test-client-id
 
-Name: TEST_CLIENT_SECRET
+Name: TEST_API_CLIENT_SECRET
 Value: test-client-secret
 ```
 
 #### Production Credentials
 ```
-Name: PROD_CLIENT_ID
+Name: PROD_API_CLIENT_ID
 Value: prod-client-id
 
-Name: PROD_CLIENT_SECRET
+Name: PROD_API_CLIENT_SECRET
 Value: prod-client-secret
 ```
 

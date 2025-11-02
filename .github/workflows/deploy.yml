@@ -17,9 +17,9 @@ on:
           - production
 
 env:
-  PYTHON_VERSION: '3.13'
-  AZURE_FUNCTIONAPP_NAME_STAGING: 'your-function-app-staging'
-  AZURE_FUNCTIONAPP_NAME_PROD: 'your-function-app-prod'
+  PYTHON_VERSION: '3.12'
+  AZURE_FUNCTIONAPP_NAME_STAGING: 'sapi-azure-key-vault-staging'
+  AZURE_FUNCTIONAPP_NAME_PROD: 'sapi-azure-key-vault-prod'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
 
 jobs:
@@ -216,8 +216,8 @@ jobs:
           pytest tests/integration/ -v --tb=short
         env:
           API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
-          API_CLIENT_ID: ${{ secrets.TEST_CLIENT_ID }}
-          API_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+          API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
           ENVIRONMENT: staging
 
       - name: Upload Integration Test Results
@@ -254,16 +254,16 @@ jobs:
           pytest tests/smoke/ -v --tb=short
         env:
           API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
-          API_CLIENT_ID: ${{ secrets.TEST_CLIENT_ID }}
-          API_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+          API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
 
       - name: Health Check
         run: |
           python tests/smoke/health_check.py
         env:
           API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
-          API_CLIENT_ID: ${{ secrets.TEST_CLIENT_ID }}
-          API_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+          API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
 
   # ============================================================================
   # STAGE 7: Manual Approval Gate (for Production)
@@ -319,8 +319,8 @@ jobs:
       - name: Warm up staging slot
         run: |
           curl -f https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api/v1/properties?env=health&key=check \
-            -H "client_id: ${{ secrets.PROD_CLIENT_ID }}" \
-            -H "client_secret: ${{ secrets.PROD_CLIENT_SECRET }}" || true
+            -H "client_id: ${{ secrets.PROD_API_CLIENT_ID }}" \
+            -H "client_secret: ${{ secrets.PROD_API_CLIENT_SECRET }}" || true
 
       - name: Install dependencies
         run: |
@@ -332,8 +332,8 @@ jobs:
           python tests/smoke/pre_swap_validation.py
         env:
           API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net
-          API_CLIENT_ID: ${{ secrets.PROD_CLIENT_ID }}
-          API_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
+          API_CLIENT_ID: ${{ secrets.PROD_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.PROD_API_CLIENT_SECRET }}
 
       - name: Swap Slots (Blue-Green Deployment)
         uses: azure/CLI@v1
@@ -376,8 +376,8 @@ jobs:
           pytest tests/smoke/ -v --tb=short
         env:
           API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
-          API_CLIENT_ID: ${{ secrets.PROD_CLIENT_ID }}
-          API_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
+          API_CLIENT_ID: ${{ secrets.PROD_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.PROD_API_CLIENT_SECRET }}
         continue-on-error: true
 
       - name: Health Check Monitoring
@@ -386,8 +386,8 @@ jobs:
           python tests/smoke/health_check.py --monitor --duration=120
         env:
           API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
-          API_CLIENT_ID: ${{ secrets.PROD_CLIENT_ID }}
-          API_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
+          API_CLIENT_ID: ${{ secrets.PROD_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.PROD_API_CLIENT_SECRET }}
         continue-on-error: true
 
       - name: Check Application Insights Metrics
