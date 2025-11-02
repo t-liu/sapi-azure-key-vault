@@ -18,7 +18,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.12'
-  AZURE_FUNCTIONAPP_NAME_STAGING: 'sapi-azure-key-vault-staging'
+  AZURE_FUNCTIONAPP_NAME_STAGING: 'sapi-azure-key-vault'
   AZURE_FUNCTIONAPP_NAME_PROD: 'sapi-azure-key-vault-prod'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
 
@@ -66,15 +66,15 @@ jobs:
 
       - name: Run Bandit (Security Analysis)
         run: |
-          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -f json -o security-analysis-report.json || true
           bandit -r . -ll
 
-      - name: Upload Bandit Report
+      - name: Upload Security Analysis Report (Bandit)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: bandit-security-report
-          path: bandit-report.json
+          name: security-analysis-report
+          path: security-analysis-report.json
 
   # ============================================================================
   # STAGE 2: Unit Tests
