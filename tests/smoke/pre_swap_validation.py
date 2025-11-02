@@ -22,7 +22,7 @@ def validate_endpoint_get() -> Tuple[bool, str]:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=headers,
-            params={"env": "validation", "appKey": "test"},
+            params={"env": "validation", "key": "test"},
             timeout=5,
         )
 
@@ -79,7 +79,7 @@ def validate_authentication() -> Tuple[bool, str]:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=invalid_headers,
-            params={"env": "test", "appKey": "test"},
+            params={"env": "test", "key": "test"},
             timeout=5,
         )
 

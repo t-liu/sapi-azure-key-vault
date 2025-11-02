@@ -13,7 +13,9 @@ sapi-azure-key-vault/
 ├── app/                       # Application code
 │   ├── function_app.py        # Azure Function HTTP triggers
 │   ├── keyvault_service.py    # Service layer for Key Vault
-│   └── models.py              # Pydantic validation models
+│   ├── models.py              # Pydantic validation models
+│   ├── rate_limiter.py        # Thread safe rate limiter
+│   └── constants.py           # Centralized configuration and constants module
 ├── tests/                     # Test suites
 │   ├── unit/                  # Unit tests
 │   ├── integration/           # Integration tests
@@ -56,7 +58,7 @@ sapi-azure-key-vault/
 
 ## Prerequisites
 
-- Python 3.13 or higher (3.9 reached EOL in October 2025)
+- Python 3.13 or higher
 - Azure Functions Core Tools v4
 - Azure subscription with Key Vault
 - Azure CLI (for deployment)
@@ -124,7 +126,7 @@ Retrieve all properties for a specific environment and application.
 
 **Request:**
 ```http
-GET /api/v1/properties?env=qa&appKey=ei-sapi-srs-crm-job-util
+GET /api/v1/properties?env=qa&key=job-finance-procurement
 Headers:
   client_id: your-client-id
   client_secret: your-client-secret
@@ -136,7 +138,7 @@ Headers:
     "responses": [
         {
             "env": "qa",
-            "appKey": "ei-sapi-srs-crm-job-util",
+            "key": "job-finance-procurement",
             "properties": {
                 "https.port": "443",
                 "other-app-secrets": "secret-value"
@@ -162,9 +164,9 @@ Content-Type: application/json
     "properties": [
         {
             "environment": "qa",
-            "key": "ei-sapi-srs-crm-job-util",
+            "key": "job-finance-hcm",
             "properties": {
-                "other-app-secrets": "thisTheNewSecretIdFromBtQuoteToOrderQA"
+                "other-app-secrets": "thisTheNewSecretId"
             }
         }
     ]
@@ -176,12 +178,10 @@ Content-Type: application/json
 {
     "responses": [
         {
-            "env": "qa",
-            "appKey": "ei-sapi-srs-crm-job-util",
-            "properties": {
-                "https.port": "443",
-                "other-app-secrets": "thisTheNewSecretIdFromBtQuoteToOrderQA"
-            }
+            "environment": "qa",
+            "key": "job-finance-hcm",
+            "code": 200,
+            "message": "Properties Posted Successfully"
         }
     ]
 }
@@ -203,7 +203,7 @@ Content-Type: application/json
     "properties": [
         {
             "environment": "qa",
-            "key": "ei-sapi-srs-crm-job-util",
+            "key": "job-hcm-learning",
             "properties": {
                 "new-property": "new-value"
             }
@@ -218,7 +218,7 @@ Delete all properties for a specific environment and application.
 
 **Request:**
 ```http
-DELETE /api/v1/properties?env=qa&appKey=ei-sapi-srs-crm-job-util
+DELETE /api/v1/properties?env=qa&key=job-quote-to-cash
 Headers:
   client_id: your-client-id
   client_secret: your-client-secret
@@ -227,9 +227,9 @@ Headers:
 **Response:**
 ```json
 {
-    "message": "Successfully deleted properties for qa/ei-sapi-srs-crm-job-util",
+    "message": "Successfully deleted properties for qa/job-quote-to-cash",
     "env": "qa",
-    "appKey": "ei-sapi-srs-crm-job-util"
+    "key": "job-quote-to-cash"
 }
 ```
 
@@ -265,7 +265,7 @@ The API will be available at: `http://localhost:7071/api/v1/properties`
 
 ```bash
 # GET request
-curl -X GET "http://localhost:7071/api/v1/properties?env=qa&appKey=test-app" \
+curl -X GET "http://localhost:7071/api/v1/properties?env=qa&key=test-app" \
   -H "client_id: your-client-id" \
   -H "client_secret: your-client-secret"
 

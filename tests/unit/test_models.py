@@ -144,9 +144,9 @@ class TestPropertyResponse:
 
     def test_valid_property_response(self):
         """Test creating a valid PropertyResponse"""
-        response = PropertyResponse(env="qa", appKey="test-app", properties={"key1": "value1"})
+        response = PropertyResponse(env="qa", key="test-app", properties={"key1": "value1"})
         assert response.env == "qa"
-        assert response.appKey == "test-app"
+        assert response.key == "test-app"
         assert response.properties == {"key1": "value1"}
 
 
@@ -156,14 +156,14 @@ class TestPropertiesResponse:
     def test_valid_properties_response(self):
         """Test creating a valid PropertiesResponse"""
         response = PropertiesResponse(
-            responses=[PropertyResponse(env="qa", appKey="test-app", properties={"key1": "value1"})]
+            responses=[PropertyResponse(env="qa", key="test-app", properties={"key1": "value1"})]
         )
         assert len(response.responses) == 1
 
     def test_serialize_to_json(self):
         """Test serialization to JSON"""
         response = PropertiesResponse(
-            responses=[PropertyResponse(env="qa", appKey="test-app", properties={"key1": "value1"})]
+            responses=[PropertyResponse(env="qa", key="test-app", properties={"key1": "value1"})]
         )
         json_str = response.model_dump_json()
         assert "qa" in json_str

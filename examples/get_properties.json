@@ -2,7 +2,7 @@
     "responses": [
         {
             "env": "qa",
-            "appKey": "ei-sapi-srs-crm-job-util",
+            "key": "ei-sapi-srs-crm-job-util",
             "properties": {
                 "https.port": "443"
             }

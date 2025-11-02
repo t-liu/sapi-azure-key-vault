@@ -67,7 +67,7 @@ class TestAPIIntegration:
         get_response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": test_env, "appKey": test_app_key},
+            params={"env": test_env, "key": test_app_key},
             timeout=30,
         )
 
@@ -115,7 +115,7 @@ class TestAPIIntegration:
         get_response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": test_env, "appKey": test_app_key},
+            params={"env": test_env, "key": test_app_key},
             timeout=30,
         )
 
@@ -139,7 +139,7 @@ class TestAPIIntegration:
         delete_response = requests.delete(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": test_env, "appKey": test_app_key},
+            params={"env": test_env, "key": test_app_key},
             timeout=30,
         )
 
@@ -149,7 +149,7 @@ class TestAPIIntegration:
         get_response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": test_env, "appKey": test_app_key},
+            params={"env": test_env, "key": test_app_key},
             timeout=30,
         )
 
@@ -164,7 +164,7 @@ class TestAPIAuthentication:
     def test_missing_auth_headers_returns_401(self):
         """Test that missing authentication returns 401"""
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties", params={"env": "qa", "appKey": "test"}, timeout=30
+            f"{API_BASE_URL}/api/v1/properties", params={"env": "qa", "key": "test"}, timeout=30
         )
 
         assert response.status_code == 401
@@ -176,7 +176,7 @@ class TestAPIAuthentication:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=invalid_headers,
-            params={"env": "qa", "appKey": "test"},
+            params={"env": "qa", "key": "test"},
             timeout=30,
         )
 
@@ -191,7 +191,7 @@ class TestAPIValidation:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": "qa"},  # Missing appKey
+            params={"env": "qa"},  # Missing key
             timeout=30,
         )
 

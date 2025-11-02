@@ -107,10 +107,10 @@ JSON Response
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET | `/api/v1/properties?env={env}&appKey={key}` | Retrieve properties |
+| GET | `/api/v1/properties?env={env}&key={key}` | Retrieve properties |
 | POST | `/api/v1/properties` | Create/update properties |
 | PUT | `/api/v1/properties` | Update properties |
-| DELETE | `/api/v1/properties?env={env}&appKey={key}` | Delete properties |
+| DELETE | `/api/v1/properties?env={env}&key={key}` | Delete properties |
 
 **Authentication**: All endpoints require `client_id` and `client_secret` headers.
 
@@ -275,7 +275,7 @@ cp config/local.settings.template.json config/local.settings.json
 func start
 
 # 4. Test
-curl -X GET "http://localhost:7071/api/v1/properties?env=qa&appKey=test" \
+curl -X GET "http://localhost:7071/api/v1/properties?env=qa&key=test" \
   -H "client_id: test-client-id" \
   -H "client_secret: test-client-secret"
 ```

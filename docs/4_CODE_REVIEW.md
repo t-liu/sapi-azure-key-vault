@@ -606,7 +606,7 @@ class ErrorMessages:
     AUTH_RATE_LIMITED = "Rate limit exceeded. Try again later."
     
     VALIDATION_MISSING_ENV = "Missing required query parameter: env"
-    VALIDATION_MISSING_APP_KEY = "Missing required query parameter: appKey"
+    VALIDATION_MISSING_APP_KEY = "Missing required query parameter: key"
     VALIDATION_MISSING_PROPERTIES_KEY = "Request body must contain top-level key 'properties'"
     
     INTERNAL_ERROR = "An unexpected error occurred"
@@ -651,7 +651,7 @@ class HTTPHeaders:
 class DeleteResponse(BaseModel):
     message: str
     env: str
-    appKey: str
+    key: str
     deleted_count: int
 
 # In function_app.py
@@ -660,7 +660,7 @@ deleted_count = kv_service.delete_properties(env, app_key)
 response = DeleteResponse(
     message=f"Successfully deleted properties for {env}/{app_key}",
     env=env,
-    appKey=app_key,
+    key=app_key,
     deleted_count=deleted_count
 )
 
@@ -762,7 +762,7 @@ for idx, item in enumerate(request_data.properties):
         responses.append(
             PropertyResponse(
                 env=item.environment,
-                appKey=item.key,
+                key=item.key,
                 properties=updated_properties
             )
         )

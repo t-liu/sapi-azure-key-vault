@@ -318,7 +318,7 @@ jobs:
 
       - name: Warm up staging slot
         run: |
-          curl -f https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api/v1/properties?env=health&appKey=check \
+          curl -f https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api/v1/properties?env=health&key=check \
             -H "client_id: ${{ secrets.PROD_CLIENT_ID }}" \
             -H "client_secret: ${{ secrets.PROD_CLIENT_SECRET }}" || true
 

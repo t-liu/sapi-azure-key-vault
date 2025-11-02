@@ -33,7 +33,7 @@ class TestSmokeTests:
             response = requests.get(
                 f"{API_BASE_URL}/api/v1/properties",
                 headers=api_headers,
-                params={"env": "smoke", "appKey": "test"},
+                params={"env": "smoke", "key": "test"},
                 timeout=10,
             )
             # Should get either 200 or 400, but not 404 or 500
@@ -50,7 +50,7 @@ class TestSmokeTests:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": "smoke", "appKey": "test"},
+            params={"env": "smoke", "key": "test"},
             timeout=10,
         )
 
@@ -65,7 +65,7 @@ class TestSmokeTests:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": "smoke", "appKey": "test"},
+            params={"env": "smoke", "key": "test"},
             timeout=10,
         )
 
@@ -93,7 +93,7 @@ class TestSmokeTests:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": "smoke", "appKey": "test"},
+            params={"env": "smoke", "key": "test"},
             timeout=10,
         )
 
@@ -108,7 +108,7 @@ class TestSmokeTests:
         # Request without authentication
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
-            params={"env": "smoke", "appKey": "test"},
+            params={"env": "smoke", "key": "test"},
             timeout=10,
         )
 
@@ -124,7 +124,7 @@ class TestSmokeTests:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=api_headers,
-            params={"env": "smoke", "appKey": "test"},
+            params={"env": "smoke", "key": "test"},
             timeout=10,
         )
         elapsed_time = time.time() - start_time

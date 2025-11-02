@@ -193,7 +193,7 @@ def create_error_response(
 
 def validate_query_params(req: func.HttpRequest) -> Tuple[str, str, str]:
     """
-    Validate and extract env and appKey query parameters
+    Validate and extract env and key query parameters
 
     Args:
         req: HTTP request object
@@ -202,7 +202,7 @@ def validate_query_params(req: func.HttpRequest) -> Tuple[str, str, str]:
         Tuple of (env, app_key, error_message)
     """
     env = req.params.get("env")
-    app_key = req.params.get("appKey")
+    app_key = req.params.get("key")
 
     if not env:
         return None, None, ErrorMessages.VALIDATION_MISSING_ENV
@@ -220,7 +220,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
 
     Query Parameters:
         env: Environment name (e.g., 'qa', 'prod')
-        appKey: Application key identifier
+        key: Application key identifier
 
     Headers:
         client_id: Client ID for authentication
@@ -250,7 +250,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
 
         # Build response
         response = PropertiesResponse(
-            responses=[PropertyResponse(env=env, appKey=app_key, properties=properties)]
+            responses=[PropertyResponse(env=env, key=app_key, properties=properties)]
         )
 
         logger.info(f"[{correlation_id}] GET /api/v1/properties - Success for {env}/{app_key}")
@@ -318,7 +318,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
             # Add to responses
             responses.append(
                 PropertyResponse(
-                    env=item.environment, appKey=item.key, properties=updated_properties
+                    env=item.environment, key=item.key, properties=updated_properties
                 )
             )
 
@@ -423,7 +423,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
 
     Query Parameters:
         env: Environment name (e.g., 'qa', 'prod')
-        appKey: Application key identifier
+        key: Application key identifier
 
     Headers:
         client_id: Client ID for authentication
@@ -455,7 +455,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
         response = DeleteResponse(
             message=f"Successfully deleted properties for {env}/{app_key}",
             env=env,
-            appKey=app_key,
+            key=app_key,
             deleted_count=deleted_count,
         )
 

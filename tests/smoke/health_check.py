@@ -30,7 +30,7 @@ def check_api_health() -> Tuple[bool, str]:
         response = requests.get(
             f"{API_BASE_URL}/api/v1/properties",
             headers=headers,
-            params={"env": "health", "appKey": "check"},
+            params={"env": "health", "key": "check"},
             timeout=5,
         )
 

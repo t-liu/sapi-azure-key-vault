@@ -107,7 +107,7 @@ class TestValidateQueryParams:
     def test_valid_query_params(self):
         """Test with valid query parameters"""
         req = Mock(spec=func.HttpRequest)
-        req.params = {"env": "qa", "appKey": "test-app"}
+        req.params = {"env": "qa", "key": "test-app"}
 
         env, app_key, error_msg = validate_query_params(req)
         assert env == "qa"
@@ -117,22 +117,22 @@ class TestValidateQueryParams:
     def test_missing_env_param(self):
         """Test with missing env parameter"""
         req = Mock(spec=func.HttpRequest)
-        req.params = {"appKey": "test-app"}
+        req.params = {"key": "test-app"}
 
         env, app_key, error_msg = validate_query_params(req)
         assert env is None
         assert app_key is None
         assert "Missing required query parameter: env" in error_msg
 
-    def test_missing_appkey_param(self):
-        """Test with missing appKey parameter"""
+    def test_missing_key_param(self):
+        """Test with missing key parameter"""
         req = Mock(spec=func.HttpRequest)
         req.params = {"env": "qa"}
 
         env, app_key, error_msg = validate_query_params(req)
         assert env is None
         assert app_key is None
-        assert "Missing required query parameter: appKey" in error_msg
+        assert "Missing required query parameter: key" in error_msg
 
 
 class TestCreateErrorResponse:
@@ -167,7 +167,7 @@ class TestGetPropertiesEndpoint:
             "client_secret": "test-client-secret",
             "X-Forwarded-For": "1.2.3.4",
         }
-        req.params = {"env": "qa", "appKey": "test-app"}
+        req.params = {"env": "qa", "key": "test-app"}
 
         # Execute
         response = get_properties(req)
@@ -177,7 +177,7 @@ class TestGetPropertiesEndpoint:
         body = json.loads(response.get_body())
         assert "responses" in body
         assert body["responses"][0]["env"] == "qa"
-        assert body["responses"][0]["appKey"] == "test-app"
+        assert body["responses"][0]["key"] == "test-app"
 
     @patch("app.function_app.kv_service")
     def test_get_properties_internal_error_masked(self, mock_service, mock_env_vars):
@@ -194,7 +194,7 @@ class TestGetPropertiesEndpoint:
             "client_secret": "test-client-secret",
             "X-Forwarded-For": "1.2.3.4",
         }
-        req.params = {"env": "qa", "appKey": "test-app"}
+        req.params = {"env": "qa", "key": "test-app"}
 
         # Execute
         response = get_properties(req)
@@ -212,7 +212,7 @@ class TestGetPropertiesEndpoint:
         """Test GET request with invalid authentication"""
         req = Mock(spec=func.HttpRequest)
         req.headers = {"client_id": "wrong", "client_secret": "wrong", "X-Forwarded-For": "1.2.3.4"}
-        req.params = {"env": "qa", "appKey": "test-app"}
+        req.params = {"env": "qa", "key": "test-app"}
 
         response = get_properties(req)
 
@@ -222,7 +222,7 @@ class TestGetPropertiesEndpoint:
         """Test GET request with missing parameters"""
         req = Mock(spec=func.HttpRequest)
         req.headers = {"client_id": "test-client-id", "client_secret": "test-client-secret"}
-        req.params = {"env": "qa"}  # Missing appKey
+        req.params = {"env": "qa"}  # Missing key
 
         response = get_properties(req)
 
@@ -312,7 +312,7 @@ class TestDeletePropertiesEndpoint:
             "client_secret": "test-client-secret",
             "X-Forwarded-For": "1.2.3.4",
         }
-        req.params = {"env": "qa", "appKey": "test-app"}
+        req.params = {"env": "qa", "key": "test-app"}
 
         # Execute
         response = delete_properties(req)

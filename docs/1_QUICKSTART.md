@@ -93,7 +93,7 @@ curl -X POST "http://localhost:7071/api/v1/properties" \
   }'
 
 # Retrieve the property
-curl -X GET "http://localhost:7071/api/v1/properties?env=qa&appKey=test-app" \
+curl -X GET "http://localhost:7071/api/v1/properties?env=qa&key=test-app" \
   -H "client_id: test-client-id" \
   -H "client_secret: test-client-secret"
 ```
@@ -175,10 +175,10 @@ chmod +x scripts/deploy.sh
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/v1/properties?env={env}&appKey={key}` | Retrieve properties |
+| GET | `/api/v1/properties?env={env}&key={key}` | Retrieve properties |
 | POST | `/api/v1/properties` | Create/update properties |
 | PUT | `/api/v1/properties` | Update properties |
-| DELETE | `/api/v1/properties?env={env}&appKey={key}` | Delete properties |
+| DELETE | `/api/v1/properties?env={env}&key={key}` | Delete properties |
 
 **All endpoints require**:
 - Header: `client_id`

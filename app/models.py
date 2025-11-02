@@ -88,7 +88,7 @@ class PropertyResponse(BaseModel):
     """Model for individual property response"""
 
     env: str
-    appKey: str
+    key: str
     properties: Dict[str, str]
 
 
@@ -103,7 +103,7 @@ class DeleteResponse(BaseModel):
 
     message: str
     env: str
-    appKey: str
+    key: str
     deleted_count: int
 
 

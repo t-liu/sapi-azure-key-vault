@@ -49,7 +49,7 @@ class ErrorMessages:
 
     # Validation Errors
     VALIDATION_MISSING_ENV = "Missing required query parameter: env"
-    VALIDATION_MISSING_APP_KEY = "Missing required query parameter: appKey"
+    VALIDATION_MISSING_APP_KEY = "Missing required query parameter: key"
     VALIDATION_MISSING_PROPERTIES_KEY = "Request body must contain top-level key 'properties'"
     VALIDATION_INVALID_REQUEST_BODY = "Invalid request body"
 
