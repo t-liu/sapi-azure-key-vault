@@ -317,9 +317,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
 
             # Add to responses
             responses.append(
-                PropertyResponse(
-                    env=item.environment, key=item.key, properties=updated_properties
-                )
+                PropertyResponse(env=item.environment, key=item.key, properties=updated_properties)
             )
 
         # Build response
