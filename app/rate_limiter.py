@@ -22,7 +22,7 @@ class RateLimiter:
     def __init__(
         self,
         max_requests: int = Config.RATE_LIMIT_MAX_REQUESTS,
-        window_seconds: int = Config.RATE_LIMIT_WINDOW_SECONDS
+        window_seconds: int = Config.RATE_LIMIT_WINDOW_SECONDS,
     ):
         """
         Initialize rate limiter

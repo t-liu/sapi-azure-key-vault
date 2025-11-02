@@ -20,7 +20,7 @@ class PropertyItem(BaseModel):
         ...,
         min_length=1,
         max_length=Config.MAX_APP_KEY_LENGTH,
-        description=f"Application key (max {Config.MAX_APP_KEY_LENGTH} chars)"
+        description=f"Application key (max {Config.MAX_APP_KEY_LENGTH} chars)",
     )
     properties: Dict[str, str] = Field(..., description="Key-value pairs of properties")
 
@@ -80,7 +80,7 @@ class PropertiesRequest(BaseModel):
         ...,
         min_length=1,
         max_length=Config.MAX_ITEMS_PER_BATCH,
-        description=f"List of property items (max {Config.MAX_ITEMS_PER_BATCH})"
+        description=f"List of property items (max {Config.MAX_ITEMS_PER_BATCH})",
     )
 
 

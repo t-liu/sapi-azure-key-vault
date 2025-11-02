@@ -110,7 +110,7 @@ class KeyVaultService:
         wait=wait_exponential(
             multiplier=Config.RETRY_MULTIPLIER,
             min=Config.RETRY_MIN_WAIT_SECONDS,
-            max=Config.RETRY_MAX_WAIT_SECONDS
+            max=Config.RETRY_MAX_WAIT_SECONDS,
         ),
         retry=retry_if_exception_type((ServiceRequestError, HttpResponseError)),
         reraise=True,
@@ -181,7 +181,7 @@ class KeyVaultService:
         wait=wait_exponential(
             multiplier=Config.RETRY_MULTIPLIER,
             min=Config.RETRY_MIN_WAIT_SECONDS,
-            max=Config.RETRY_MAX_WAIT_SECONDS
+            max=Config.RETRY_MAX_WAIT_SECONDS,
         ),
         retry=retry_if_exception_type((ServiceRequestError, HttpResponseError)),
         reraise=True,
@@ -225,7 +225,7 @@ class KeyVaultService:
         wait=wait_exponential(
             multiplier=Config.RETRY_MULTIPLIER,
             min=Config.RETRY_MIN_WAIT_SECONDS,
-            max=Config.RETRY_MAX_WAIT_SECONDS
+            max=Config.RETRY_MAX_WAIT_SECONDS,
         ),
         retry=retry_if_exception_type((ServiceRequestError, HttpResponseError)),
         reraise=True,

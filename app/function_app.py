@@ -49,14 +49,16 @@ rate_limiter = RateLimiter()
 def get_or_generate_correlation_id(req: func.HttpRequest) -> str:
     """
     Get correlation ID from request header or generate a new one
-    
+
     Args:
         req: HTTP request object
-    
+
     Returns:
         Correlation ID string
     """
-    correlation_id = req.headers.get(HTTPHeaders.CORRELATION_ID) or req.headers.get(HTTPHeaders.REQUEST_ID)
+    correlation_id = req.headers.get(HTTPHeaders.CORRELATION_ID) or req.headers.get(
+        HTTPHeaders.REQUEST_ID
+    )
     if not correlation_id:
         correlation_id = str(uuid.uuid4())
     return correlation_id
@@ -66,57 +68,51 @@ def get_or_generate_correlation_id(req: func.HttpRequest) -> str:
 def health_check(req: func.HttpRequest) -> func.HttpResponse:
     """
     Health check endpoint for monitoring and load balancers
-    
+
     Returns 200 if healthy, 503 if unhealthy
     No authentication required - this is a public endpoint
     """
     from datetime import datetime
-    
+
     health_status = {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "version": Config.APP_VERSION,
-        "checks": {}
+        "checks": {},
     }
-    
+
     try:
         # Check if KeyVaultService is initialized
         if kv_service is None:
             health_status["status"] = "unhealthy"
             health_status["checks"]["key_vault_service"] = "not_initialized"
             logger.error(LogMessages.HEALTH_SERVICE_NOT_INITIALIZED)
-            
+
             return func.HttpResponse(
-                body=json.dumps(health_status),
-                status_code=503,
-                mimetype="application/json"
+                body=json.dumps(health_status), status_code=503, mimetype="application/json"
             )
-        
+
         # Lightweight check - verify we can list secrets (fetch only 1)
         # This doesn't fetch all secrets, just checks connectivity
         secret_iterator = kv_service.client.list_properties_of_secrets()
         # Force evaluation of first item (or empty iterator)
         next(iter(secret_iterator), None)
-        
+
         health_status["checks"]["key_vault"] = "healthy"
-        
+
         logger.info(LogMessages.HEALTH_CHECK_PASSED)
-        
+
         return func.HttpResponse(
-            body=json.dumps(health_status),
-            status_code=200,
-            mimetype="application/json"
+            body=json.dumps(health_status), status_code=200, mimetype="application/json"
         )
-        
+
     except Exception as e:
         health_status["status"] = "unhealthy"
         health_status["checks"]["key_vault"] = "unhealthy"
         logger.error(LogMessages.HEALTH_CHECK_FAILED.format(error=str(e)))
-        
+
         return func.HttpResponse(
-            body=json.dumps(health_status),
-            status_code=503,
-            mimetype="application/json"
+            body=json.dumps(health_status), status_code=503, mimetype="application/json"
         )
 
 
@@ -134,7 +130,9 @@ def validate_auth_headers(req: func.HttpRequest) -> Tuple[bool, str]:
     client_secret = req.headers.get(HTTPHeaders.CLIENT_SECRET, "")
 
     # Extract client IP early for logging purposes across all code paths
-    client_ip = req.headers.get(HTTPHeaders.FORWARDED_FOR, req.headers.get(HTTPHeaders.REAL_IP, "unknown"))
+    client_ip = req.headers.get(
+        HTTPHeaders.FORWARDED_FOR, req.headers.get(HTTPHeaders.REAL_IP, "unknown")
+    )
 
     if not client_id or not client_secret:
         return False, ErrorMessages.AUTH_MISSING_HEADERS
@@ -189,7 +187,7 @@ def create_error_response(
         body=error_response.model_dump_json(),
         status_code=status_code,
         mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
-        headers=headers
+        headers=headers,
     )
 
 
@@ -260,13 +258,15 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
             body=response.model_dump_json(),
             status_code=200,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
-            headers={HTTPHeaders.CORRELATION_ID: correlation_id}
+            headers={HTTPHeaders.CORRELATION_ID: correlation_id},
         )
 
     except Exception as e:
         logger.error(f"[{correlation_id}] GET /api/v1/properties - Error: {str(e)}", exc_info=True)
         # Don't expose internal error details to clients
-        return create_error_response("InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id)
+        return create_error_response(
+            "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
+        )
 
 
 def _process_properties_request(req: func.HttpRequest, method: str) -> func.HttpResponse:
@@ -300,7 +300,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
                 "ValidationError",
                 ErrorMessages.VALIDATION_MISSING_PROPERTIES_KEY,
                 400,
-                correlation_id
+                correlation_id,
             )
 
         # Validate with Pydantic model
@@ -328,16 +328,20 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         # Use 201 Created for POST, 200 OK for PUT
         status_code = 201 if method == "POST" else 200
 
-        logger.info(f"[{correlation_id}] {method} /api/v1/properties - Success, processed {len(responses)} items")
+        logger.info(
+            f"[{correlation_id}] {method} /api/v1/properties - Success, processed {len(responses)} items"
+        )
         return func.HttpResponse(
             body=response.model_dump_json(),
             status_code=status_code,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
-            headers={HTTPHeaders.CORRELATION_ID: correlation_id}
+            headers={HTTPHeaders.CORRELATION_ID: correlation_id},
         )
 
     except ValidationError as e:
-        logger.warning(f"[{correlation_id}] {method} /api/v1/properties - Validation error: {str(e)}")
+        logger.warning(
+            f"[{correlation_id}] {method} /api/v1/properties - Validation error: {str(e)}"
+        )
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except ValueError as e:
@@ -345,9 +349,13 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except Exception as e:
-        logger.error(f"[{correlation_id}] {method} /api/v1/properties - Error: {str(e)}", exc_info=True)
+        logger.error(
+            f"[{correlation_id}] {method} /api/v1/properties - Error: {str(e)}", exc_info=True
+        )
         # Don't expose internal error details to clients
-        return create_error_response("InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id)
+        return create_error_response(
+            "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
+        )
 
 
 @app.route(route="api/v1/properties", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
@@ -448,18 +456,24 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
             message=f"Successfully deleted properties for {env}/{app_key}",
             env=env,
             appKey=app_key,
-            deleted_count=deleted_count
+            deleted_count=deleted_count,
         )
 
-        logger.info(f"[{correlation_id}] DELETE /api/v1/properties - Success for {env}/{app_key}, deleted {deleted_count} properties")
+        logger.info(
+            f"[{correlation_id}] DELETE /api/v1/properties - Success for {env}/{app_key}, deleted {deleted_count} properties"
+        )
         return func.HttpResponse(
             body=response.model_dump_json(),
             status_code=200,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
-            headers={HTTPHeaders.CORRELATION_ID: correlation_id}
+            headers={HTTPHeaders.CORRELATION_ID: correlation_id},
         )
 
     except Exception as e:
-        logger.error(f"[{correlation_id}] DELETE /api/v1/properties - Error: {str(e)}", exc_info=True)
+        logger.error(
+            f"[{correlation_id}] DELETE /api/v1/properties - Error: {str(e)}", exc_info=True
+        )
         # Don't expose internal error details to clients
-        return create_error_response("InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id)
+        return create_error_response(
+            "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
+        )
