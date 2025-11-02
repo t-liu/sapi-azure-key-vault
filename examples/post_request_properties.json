@@ -1,0 +1,12 @@
+{
+    "properties": [
+        {
+          "environment": "qa",
+          "key": "job-costpoint-ivalua",
+          "properties": {
+            "https.port": "443",
+            "other-app-secrets": "thisTheNewSecretId"
+          }
+        }
+    ]
+}

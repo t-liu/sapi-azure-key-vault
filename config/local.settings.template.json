@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AZURE_KEY_VAULT_URL": "https://your-keyvault-name.vault.azure.net/",
+    "VALID_CLIENT_ID": "your-client-id-here",
+    "VALID_CLIENT_SECRET": "your-client-secret-here",
+    "LOG_LEVEL": "INFO"
+  }
+}
+

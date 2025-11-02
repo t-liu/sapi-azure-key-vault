@@ -1,0 +1,543 @@
+name: Azure Function CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PYTHON_VERSION: '3.13'
+  AZURE_FUNCTIONAPP_NAME_STAGING: 'your-function-app-staging'
+  AZURE_FUNCTIONAPP_NAME_PROD: 'your-function-app-prod'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
+
+jobs:
+  # ============================================================================
+  # STAGE 1: Lint & Static Analysis
+  # ============================================================================
+  lint-and-analysis:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run Black (Code Formatter Check)
+        run: |
+          black --check --diff .
+        continue-on-error: false
+
+      - name: Run Flake8 (Linting)
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run Pylint (Code Quality)
+        run: |
+          pylint app/ --exit-zero
+
+      - name: Run MyPy (Type Checking)
+        run: |
+          mypy app/ --ignore-missing-imports
+        continue-on-error: true
+
+      - name: Run Bandit (Security Analysis)
+        run: |
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -ll
+
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+
+  # ============================================================================
+  # STAGE 2: Unit Tests
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-analysis
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run Unit Tests with Coverage
+        run: |
+          pytest tests/unit/ -v --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
+        env:
+          AZURE_KEY_VAULT_URL: https://test-vault.vault.azure.net/
+          VALID_CLIENT_ID: test-client-id
+          VALID_CLIENT_SECRET: test-client-secret
+
+      - name: Upload Coverage Report
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Upload HTML Coverage Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  # ============================================================================
+  # STAGE 3: Build and Package Artifact
+  # ============================================================================
+  build-and-package:
+    name: Build & Package Artifact
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create deployment package
+        run: |
+          python -m pip install --upgrade pip
+          pip install --target=".python_packages/lib/site-packages" -r requirements.txt
+          
+      - name: Create artifact directory
+        run: |
+          mkdir -p artifact
+          cp -r app/ host.json requirements.txt .python_packages artifact/
+
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-function-app
+          path: artifact/
+          retention-days: 7
+
+  # ============================================================================
+  # STAGE 4: Deploy to Staging
+  # ============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-package
+    environment:
+      name: staging
+      url: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}.azurewebsites.net
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: azure-function-app
+          path: ./artifact
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_STAGING }}
+
+      - name: Deploy to Azure Function (Staging Slot)
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}
+          package: ./artifact
+          slot-name: staging
+          respect-funcignore: true
+
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+
+  # ============================================================================
+  # STAGE 5: Integration Tests (Staging)
+  # ============================================================================
+  integration-tests-staging:
+    name: Integration Tests (Staging)
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run Integration Tests
+        run: |
+          pytest tests/integration/ -v --tb=short
+        env:
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
+          API_CLIENT_ID: ${{ secrets.TEST_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+          ENVIRONMENT: staging
+
+      - name: Upload Integration Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results/
+
+  # ============================================================================
+  # STAGE 6: Smoke/Canary Tests (Staging)
+  # ============================================================================
+  smoke-tests-staging:
+    name: Smoke Tests (Staging)
+    runs-on: ubuntu-latest
+    needs: integration-tests-staging
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pytest
+
+      - name: Run Smoke Tests
+        run: |
+          pytest tests/smoke/ -v --tb=short
+        env:
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
+          API_CLIENT_ID: ${{ secrets.TEST_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+
+      - name: Health Check
+        run: |
+          python tests/smoke/health_check.py
+        env:
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
+          API_CLIENT_ID: ${{ secrets.TEST_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+
+  # ============================================================================
+  # STAGE 7: Manual Approval Gate (for Production)
+  # ============================================================================
+  approval-gate:
+    name: Production Deployment Approval
+    runs-on: ubuntu-latest
+    needs: smoke-tests-staging
+    environment:
+      name: production-approval
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Manual Approval Required
+        run: |
+          echo "✅ Staging validation complete"
+          echo "⏳ Awaiting manual approval for production deployment..."
+          echo "📊 Review staging metrics before approving"
+
+  # ============================================================================
+  # STAGE 8: Deploy to Production (with Slot Swap)
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: approval-gate
+    environment:
+      name: production
+      url: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: azure-function-app
+          path: ./artifact
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
+      - name: Deploy to Production Staging Slot
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}
+          package: ./artifact
+          slot-name: staging
+          respect-funcignore: true
+
+      - name: Wait for slot deployment
+        run: sleep 30
+
+      - name: Warm up staging slot
+        run: |
+          curl -f https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api/v1/properties?env=health&appKey=check \
+            -H "client_id: ${{ secrets.PROD_CLIENT_ID }}" \
+            -H "client_secret: ${{ secrets.PROD_CLIENT_SECRET }}" || true
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run Pre-Swap Validation
+        run: |
+          python tests/smoke/pre_swap_validation.py
+        env:
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net
+          API_CLIENT_ID: ${{ secrets.PROD_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
+
+      - name: Swap Slots (Blue-Green Deployment)
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az functionapp deployment slot swap \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }} \
+              --slot staging \
+              --target-slot production
+
+      - name: Wait for swap to complete
+        run: sleep 30
+
+  # ============================================================================
+  # STAGE 9: Post-Deploy Monitoring & Validation
+  # ============================================================================
+  post-deploy-validation:
+    name: Post-Deploy Monitoring & Validation
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pytest
+
+      - name: Production Smoke Tests
+        id: prod-smoke
+        run: |
+          pytest tests/smoke/ -v --tb=short
+        env:
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
+          API_CLIENT_ID: ${{ secrets.PROD_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
+        continue-on-error: true
+
+      - name: Health Check Monitoring
+        id: health-check
+        run: |
+          python tests/smoke/health_check.py --monitor --duration=120
+        env:
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
+          API_CLIENT_ID: ${{ secrets.PROD_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
+        continue-on-error: true
+
+      - name: Check Application Insights Metrics
+        uses: azure/CLI@v1
+        continue-on-error: true
+        with:
+          inlineScript: |
+            # Query Application Insights for error rate
+            az monitor app-insights metrics show \
+              --app ${{ secrets.APP_INSIGHTS_NAME }} \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --metric requests/failed \
+              --interval PT5M
+
+      # ============================================================================
+      # AUTOMATIC ROLLBACK on Failure
+      # ============================================================================
+      - name: Rollback on Failure
+        if: failure() || steps.prod-smoke.outcome == 'failure' || steps.health-check.outcome == 'failure'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "🚨 DEPLOYMENT FAILURE DETECTED - INITIATING ROLLBACK"
+            
+            # Swap back to previous version
+            az functionapp deployment slot swap \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }} \
+              --slot staging \
+              --target-slot production
+            
+            echo "✅ Rollback completed - Previous version restored"
+
+      - name: Send Rollback Notification
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d '{
+              "@type": "MessageCard",
+              "@context": "https://schema.org/extensions",
+              "summary": "🚨 ROLLBACK EXECUTED",
+              "themeColor": "FF0000",
+              "title": "🚨 Production Deployment Rollback",
+              "sections": [{
+                "activityTitle": "Deployment Failed Validation",
+                "activitySubtitle": "Automatic rollback initiated",
+                "facts": [
+                  { "name": "Environment:", "value": "Production" },
+                  { "name": "Function App:", "value": "${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}" },
+                  { "name": "Commit:", "value": "${{ github.sha }}" },
+                  { "name": "Author:", "value": "${{ github.actor }}" },
+                  { "name": "Status:", "value": "Rolled back to previous version" }
+                ],
+                "text": "Deployment was automatically rolled back due to failed health checks. Please investigate before retrying."
+              }],
+              "potentialAction": [{
+                "@type": "OpenUri",
+                "name": "View Workflow Run",
+                "targets": [{ "os": "default", "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" }]
+              }]
+            }' \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+      - name: Create GitHub Issue on Rollback
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Production Deployment Rollback - ' + new Date().toISOString(),
+              body: 'Production deployment was automatically rolled back due to failed health checks.\n\nPlease investigate the failure and retry deployment.',
+              labels: ['production', 'rollback', 'critical']
+            })
+
+      - name: Success Notification
+        if: success()
+        run: |
+          echo "✅ Production deployment successful and validated"
+          echo "📊 Monitoring will continue via Application Insights"
+
+  # ============================================================================
+  # Notification Job
+  # ============================================================================
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [post-deploy-validation]
+    if: always()
+    steps:
+      - name: Send Success Notification
+        if: needs.post-deploy-validation.result == 'success'
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d '{
+              "@type": "MessageCard",
+              "@context": "https://schema.org/extensions",
+              "summary": "✅ Production Deployment Successful",
+              "themeColor": "00FF00",
+              "title": "✅ Production Deployment Complete",
+              "sections": [{
+                "activityTitle": "Deployment Successful",
+                "activitySubtitle": "All health checks passed",
+                "facts": [
+                  { "name": "Environment:", "value": "Production" },
+                  { "name": "Function App:", "value": "${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}" },
+                  { "name": "Repository:", "value": "${{ github.repository }}" },
+                  { "name": "Commit:", "value": "${{ github.sha }}" },
+                  { "name": "Author:", "value": "${{ github.actor }}" },
+                  { "name": "Branch:", "value": "${{ github.ref_name }}" }
+                ],
+                "text": "Production deployment completed successfully. All smoke tests and health checks passed."
+              }],
+              "potentialAction": [{
+                "@type": "OpenUri",
+                "name": "View Deployment",
+                "targets": [{ "os": "default", "uri": "https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net" }]
+              }]
+            }' \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+      - name: Send Failure Notification
+        if: needs.post-deploy-validation.result == 'failure'
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d '{
+              "@type": "MessageCard",
+              "@context": "https://schema.org/extensions",
+              "summary": "❌ Production Deployment Failed",
+              "themeColor": "FF0000",
+              "title": "❌ Production Deployment Failed",
+              "sections": [{
+                "activityTitle": "Deployment Failed",
+                "activitySubtitle": "Automatic rollback completed",
+                "facts": [
+                  { "name": "Environment:", "value": "Production" },
+                  { "name": "Repository:", "value": "${{ github.repository }}" },
+                  { "name": "Commit:", "value": "${{ github.sha }}" },
+                  { "name": "Author:", "value": "${{ github.actor }}" },
+                  { "name": "Branch:", "value": "${{ github.ref_name }}" },
+                  { "name": "Status:", "value": "Rolled back to previous version" }
+                ],
+                "text": "Production deployment failed validation and was automatically rolled back. Please review the logs and investigate the issue."
+              }],
+              "potentialAction": [{
+                "@type": "OpenUri",
+                "name": "View Workflow Run",
+                "targets": [{ "os": "default", "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" }]
+              }]
+            }' \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}
+

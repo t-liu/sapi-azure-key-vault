@@ -1,0 +1,10 @@
+{
+    "responses": [
+        {
+            "environment": "qa",
+            "key": "job-costpoint-ivalua",
+            "code": 200,
+            "message": "Properties Posted Successfully"
+        }
+    ]
+}
