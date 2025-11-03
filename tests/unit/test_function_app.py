@@ -6,7 +6,7 @@ import json
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 import azure.functions as func
-from app.function_app import (
+from function_app import (
     validate_auth_headers,
     validate_query_params,
     create_error_response,
@@ -154,7 +154,7 @@ class TestCreateErrorResponse:
 class TestGetPropertiesEndpoint:
     """Test GET /v1/properties endpoint"""
 
-    @patch("app.function_app.kv_service")
+    @patch("function_app.kv_service")
     def test_get_properties_success(self, mock_service, mock_env_vars):
         """Test successful GET request"""
         # Setup mock service
@@ -179,7 +179,7 @@ class TestGetPropertiesEndpoint:
         assert body["responses"][0]["env"] == "qa"
         assert body["responses"][0]["key"] == "test-app"
 
-    @patch("app.function_app.kv_service")
+    @patch("function_app.kv_service")
     def test_get_properties_internal_error_masked(self, mock_service, mock_env_vars):
         """Test that internal errors don't expose details"""
         # Setup mock service to raise exception
@@ -232,7 +232,7 @@ class TestGetPropertiesEndpoint:
 class TestPostPropertiesEndpoint:
     """Test POST /v1/properties endpoint"""
 
-    @patch("app.function_app.kv_service")
+    @patch("function_app.kv_service")
     def test_post_properties_success(self, mock_service, mock_env_vars):
         """Test successful POST request"""
         # Setup mock service
@@ -299,7 +299,7 @@ class TestPostPropertiesEndpoint:
 class TestDeletePropertiesEndpoint:
     """Test DELETE /v1/properties endpoint"""
 
-    @patch("app.function_app.kv_service")
+    @patch("function_app.kv_service")
     def test_delete_properties_success(self, mock_service, mock_env_vars):
         """Test successful DELETE request"""
         # Setup mock service
@@ -326,7 +326,7 @@ class TestDeletePropertiesEndpoint:
 class TestHealthCheckEndpoint:
     """Test GET /api/v1/health endpoint"""
 
-    @patch("app.function_app.kv_service")
+    @patch("function_app.kv_service")
     def test_health_check_healthy(self, mock_service):
         """Test health check when service is healthy"""
         # Setup mock service
@@ -347,7 +347,7 @@ class TestHealthCheckEndpoint:
         assert "timestamp" in body
         assert body["checks"]["key_vault"] == "healthy"
 
-    @patch("app.function_app.kv_service")
+    @patch("function_app.kv_service")
     def test_health_check_unhealthy(self, mock_service):
         """Test health check when Key Vault is unhealthy"""
         # Setup mock to raise exception
@@ -365,7 +365,7 @@ class TestHealthCheckEndpoint:
         assert body["status"] == "unhealthy"
         assert body["checks"]["key_vault"] == "unhealthy"
 
-    @patch("app.function_app.kv_service", None)
+    @patch("function_app.kv_service", None)
     def test_health_check_service_not_initialized(self):
         """Test health check when KeyVaultService is not initialized"""
         # Create mock request

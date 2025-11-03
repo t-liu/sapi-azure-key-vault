@@ -9,9 +9,9 @@ class Config:
     """Application configuration constants"""
 
     # API Configuration
-    API_VERSION = "v1"
-    API_BASE_PATH = f"api/{API_VERSION}/properties"
     APP_VERSION = "2.0.0"
+    # Note: API routes are defined directly in function decorators (@app.route)
+    # API_VERSION and API_BASE_PATH reserved for future version negotiation if needed
 
     # Key Vault Configuration
     SECRET_NAME_SEPARATOR = "--"
@@ -51,15 +51,15 @@ class ErrorMessages:
     VALIDATION_MISSING_ENV = "Missing required query parameter: env"
     VALIDATION_MISSING_APP_KEY = "Missing required query parameter: key"
     VALIDATION_MISSING_PROPERTIES_KEY = "Request body must contain top-level key 'properties'"
-    VALIDATION_INVALID_REQUEST_BODY = "Invalid request body"
 
     # Internal Errors
     INTERNAL_ERROR = "An unexpected error occurred"
-    SERVICE_UNAVAILABLE = "Service temporarily unavailable"
-
-    # Key Vault Errors
-    KEYVAULT_NOT_FOUND = "Properties not found"
-    KEYVAULT_ACCESS_DENIED = "Access denied to Key Vault"
+    
+    # Reserved error messages for future enhanced error handling:
+    # SERVICE_UNAVAILABLE - for specific Azure service unavailability
+    # KEYVAULT_NOT_FOUND - for explicit "no properties found" vs empty results
+    # KEYVAULT_ACCESS_DENIED - for specific permission errors
+    # VALIDATION_INVALID_REQUEST_BODY - covered by Pydantic ValidationError
 
 
 class LogMessages:

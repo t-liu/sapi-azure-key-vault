@@ -17,7 +17,7 @@ from azure.core.exceptions import (
     HttpResponseError,
 )
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from app.constants import Config
+from app.constants import Config, LogMessages
 
 logger = logging.getLogger(__name__)
 
@@ -136,13 +136,13 @@ class KeyVaultService:
             if cached:
                 cache_age = datetime.now() - cached["timestamp"]
                 if cache_age < self._cache_ttl:
-                    logger.info(f"Cache hit for {cache_key} (age: {cache_age.seconds}s)")
+                    logger.info(LogMessages.CACHE_HIT.format(cache_key=cache_key, age=cache_age.seconds))
                     return cached["data"].copy()
                 else:
                     logger.debug(f"Cache expired for {cache_key} (age: {cache_age.seconds}s)")
 
         # Cache miss or expired - fetch from Key Vault
-        logger.info(f"Cache miss for {cache_key}, fetching from Key Vault")
+        logger.info(LogMessages.CACHE_MISS.format(cache_key=cache_key))
         properties = {}
         prefix = f"{env}--{app_key}--"
 
@@ -211,7 +211,7 @@ class KeyVaultService:
             with self._cache_lock:
                 if cache_key in self._cache:
                     del self._cache[cache_key]
-                    logger.debug(f"Cache invalidated for {cache_key}")
+                    logger.debug(LogMessages.CACHE_INVALIDATED.format(cache_key=cache_key))
 
             # Return all properties after setting (will refresh cache)
             return self.get_properties(env, app_key)
@@ -265,7 +265,7 @@ class KeyVaultService:
             with self._cache_lock:
                 if cache_key in self._cache:
                     del self._cache[cache_key]
-                    logger.debug(f"Cache invalidated for {cache_key}")
+                    logger.debug(LogMessages.CACHE_INVALIDATED.format(cache_key=cache_key))
 
             logger.info(f"Deleted {deleted_count} properties for {env}/{app_key}")
             return deleted_count
@@ -279,4 +279,4 @@ class KeyVaultService:
         with self._cache_lock:
             cache_size = len(self._cache)
             self._cache.clear()
-            logger.info(f"Cache cleared ({cache_size} entries removed)")
+            logger.info(LogMessages.CACHE_CLEARED.format(count=cache_size))

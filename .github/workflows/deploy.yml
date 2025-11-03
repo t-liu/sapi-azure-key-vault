@@ -146,16 +146,21 @@ jobs:
       - name: Create artifact directory
         run: |
           mkdir -p artifact
+          # Copy function_app.py to root (REQUIRED for Azure Functions Python V2)
+          cp function_app.py artifact/
+          # Copy supporting modules
           cp -r app/ artifact/
           cp host.json artifact/
           cp requirements.txt artifact/
 
           # Verify structure
-          echo "=== Artifact contents ==="
+          echo "=== Artifact contents (root) ==="
           ls -la artifact/
           echo ""
-          echo "=== App directory ==="
+          echo "=== App directory (supporting modules) ==="
           ls -la artifact/app/
+          echo ""
+          echo "✅ function_app.py is at root level (required for Azure Functions V2)"
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -581,4 +586,3 @@ jobs:
               }]
             }' \
             ${{ secrets.TEAMS_WEBHOOK_URL }}
-
