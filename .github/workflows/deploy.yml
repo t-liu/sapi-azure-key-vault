@@ -17,7 +17,7 @@ on:
           - production
 
 env:
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: '3.11'
   AZURE_FUNCTIONAPP_NAME_STAGING: 'sapi-azure-key-vault'
   AZURE_FUNCTIONAPP_NAME_PROD: 'sapi-azure-key-vault-prod'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'

@@ -64,7 +64,8 @@ def get_or_generate_correlation_id(req: func.HttpRequest) -> str:
     return correlation_id
 
 
-@app.route(route="api/v1/health", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.function_name(name="health_check")
+@app.route(route="v1/health", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def health_check(req: func.HttpRequest) -> func.HttpResponse:
     """
     Health check endpoint for monitoring and load balancers
@@ -213,6 +214,7 @@ def validate_query_params(req: func.HttpRequest) -> Tuple[str, str, str]:
     return env, app_key, None
 
 
+@app.function_name(name="get_properties")
 @app.route(route="v1/properties", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def get_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
@@ -352,6 +354,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         )
 
 
+@app.function_name(name="post_properties")
 @app.route(route="v1/properties", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 def post_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
@@ -381,6 +384,7 @@ def post_properties(req: func.HttpRequest) -> func.HttpResponse:
     return _process_properties_request(req, "POST")
 
 
+@app.function_name(name="put_properties")
 @app.route(route="v1/properties", methods=["PUT"], auth_level=func.AuthLevel.ANONYMOUS)
 def put_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
@@ -410,6 +414,7 @@ def put_properties(req: func.HttpRequest) -> func.HttpResponse:
     return _process_properties_request(req, "PUT")
 
 
+@app.function_name(name="delete_properties")
 @app.route(route="v1/properties", methods=["DELETE"], auth_level=func.AuthLevel.ANONYMOUS)
 def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
