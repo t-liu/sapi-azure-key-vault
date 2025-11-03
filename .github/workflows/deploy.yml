@@ -251,7 +251,7 @@ jobs:
         run: |
           pytest tests/integration/ -v --tb=short
         env:
-          API_BASE_URL: ${{ needs.deploy-staging.outputs.staging-url }}
+          API_BASE_URL: ${{ needs.deploy-staging.outputs.staging-url }}/api
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
           ENVIRONMENT: staging
@@ -298,7 +298,7 @@ jobs:
         run: |
           pytest tests/smoke/ -v --tb=short
         env:
-          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net/api
+          API_BASE_URL: ${{ needs.deploy-staging.outputs.staging-url }}/api
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
 
@@ -306,7 +306,7 @@ jobs:
         run: |
           python tests/smoke/health_check.py
         env:
-          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net/api
+          API_BASE_URL: ${{ needs.deploy-staging.outputs.staging-url }}/api
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
 
