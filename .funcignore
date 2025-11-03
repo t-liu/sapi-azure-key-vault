@@ -4,7 +4,6 @@
 __pycache__
 *.py[cod]
 *$py.class
-.python_packages
 .pytest_cache
 .env
 requirements-dev.txt
