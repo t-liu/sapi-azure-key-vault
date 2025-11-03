@@ -337,9 +337,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         )
 
     except ValidationError as e:
-        logger.warning(
-            f"[{correlation_id}] {method} /v1/properties - Validation error: {str(e)}"
-        )
+        logger.warning(f"[{correlation_id}] {method} /v1/properties - Validation error: {str(e)}")
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except ValueError as e:
@@ -347,9 +345,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except Exception as e:
-        logger.error(
-            f"[{correlation_id}] {method} /v1/properties - Error: {str(e)}", exc_info=True
-        )
+        logger.error(f"[{correlation_id}] {method} /v1/properties - Error: {str(e)}", exc_info=True)
         # Don't expose internal error details to clients
         return create_error_response(
             "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
@@ -468,9 +464,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     except Exception as e:
-        logger.error(
-            f"[{correlation_id}] DELETE /v1/properties - Error: {str(e)}", exc_info=True
-        )
+        logger.error(f"[{correlation_id}] DELETE /v1/properties - Error: {str(e)}", exc_info=True)
         # Don't expose internal error details to clients
         return create_error_response(
             "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
