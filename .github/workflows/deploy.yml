@@ -148,6 +148,17 @@ jobs:
           mkdir -p artifact
           cp -r app/ host.json requirements.txt .python_packages artifact/
 
+          # Debug - show what's being packaged
+          echo "Contents of artifact directory:"
+          ls -la artifact/
+
+          # Check if function files exist
+          if [ -f "artifact/app/function_app.py" ]; then
+            echo "✅ function_app.py found"
+          else
+            echo "❌ function_app.py NOT found"
+          fi
+
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
@@ -202,6 +213,14 @@ jobs:
           echo "url=https://${STAGING_URL}" >> $GITHUB_OUTPUT
           echo "Staging URL: https://${STAGING_URL}"
 
+      - name: Debug - Check deployed functions
+        run: |
+          echo "Checking deployed functions..."
+          az functionapp function list \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --query "[].{name:name, href:href}" -o json > deployed-functions.json
+
   # ============================================================================
   # STAGE 5: Integration Tests (Staging)
   # ============================================================================
@@ -232,6 +251,15 @@ jobs:
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
           ENVIRONMENT: staging
+
+      - name: Check Function App Logs
+        if: always()
+        run: |
+          echo "Fetching recent logs from Function App..."
+          az functionapp log tail \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging || true
 
       - name: Upload Integration Test Results
         uses: actions/upload-artifact@v4
