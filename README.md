@@ -307,7 +307,7 @@ az functionapp create \
   --resource-group <resource-group> \
   --consumption-plan-location <location> \
   --runtime python \
-  --runtime-version 3.9 \
+  --runtime-version 3.11 \
   --functions-version 4 \
   --name <function-app-name> \
   --storage-account <storage-account>
@@ -508,7 +508,7 @@ For issues or questions, contact the platform engineering team.
 ## Recent Updates
 
 ### November 2025 - Production Hardening
-- ✅ **Python 3.11 Upgrade**: Migrated from Python 3.9 (EOL) to 3.11
+- ✅ **Python 3.11 Upgrade**: Migrated from Python 3.11
 - ✅ **Security Hardening**: 10 critical security fixes implemented
   - Timing-attack protection, rate limiting, information leakage prevention
   - Input validation, data integrity (base64url encoding)

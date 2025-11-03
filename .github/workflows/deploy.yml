@@ -193,9 +193,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_STAGING }}
 
-      - name: Zip artifact
-        run: cd artifact && zip -r ../function-app.zip . -x "*.pyc" "__pycache__/*"
-
       - name: Deploy to Azure Function (Staging Slot)
         uses: Azure/functions-action@v1
         with:
@@ -252,7 +249,7 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          pytest tests/integration/ -v --tb=short
+          pytest tests/integration/ -v --tb=short --log-cli --log-cli-level=DEBUG
         env:
           API_BASE_URL: ${{ needs.deploy-staging.outputs.staging-url }}
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
