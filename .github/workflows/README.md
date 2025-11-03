@@ -102,7 +102,7 @@ Edit `.github/workflows/deploy.yml`:
 
 ```yaml
 env:
-  PYTHON_VERSION: '3.9'
+  PYTHON_VERSION: '3.11'
   AZURE_FUNCTIONAPP_NAME_STAGING: 'your-staging-function-app-name'
   AZURE_FUNCTIONAPP_NAME_PROD: 'your-prod-function-app-name'
 ```

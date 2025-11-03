@@ -146,12 +146,11 @@ jobs:
       - name: Create artifact directory
         run: |
           mkdir -p artifact
-          # Copy function_app.py to root (REQUIRED for Azure Functions Python V2)
           cp function_app.py artifact/
-          # Copy supporting modules
           cp -r app/ artifact/
           cp host.json artifact/
           cp requirements.txt artifact/
+          cp -r .python_packages/lib/site-packages/* artifact/
 
           # Verify structure
           echo "=== Artifact contents (root) ==="
@@ -193,6 +192,9 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_STAGING }}
+
+      - name: Zip artifact
+        run: cd artifact && zip -r ../function-app.zip . -x "*.pyc" "__pycache__/*"
 
       - name: Deploy to Azure Function (Staging Slot)
         uses: Azure/functions-action@v1
