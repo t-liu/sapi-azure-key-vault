@@ -249,7 +249,7 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          pytest tests/integration/ -v --tb=short --log-cli --log-cli-level=DEBUG
+          pytest tests/integration/ -v --tb=short
         env:
           API_BASE_URL: ${{ needs.deploy-staging.outputs.staging-url }}
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
