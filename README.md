@@ -53,12 +53,12 @@ sapi-azure-key-vault/
 
 ### DevOps
 - ✅ **CI/CD Pipeline** - Automated testing and deployment with 9 stages
-- ✅ **Comprehensive Testing** - 69 unit tests with 100% critical path coverage
+- ✅ **Comprehensive Testing** - ~70 unit tests with 100% critical path coverage
 - ✅ **Code Quality** - DRY principles, zero duplication between endpoints
 
 ## Prerequisites
 
-- Python 3.12 or higher
+- Python 3.11+
 - Azure Functions Core Tools v4
 - Azure subscription with Key Vault
 - Azure CLI (for deployment)
@@ -508,7 +508,7 @@ For issues or questions, contact the platform engineering team.
 ## Recent Updates
 
 ### November 2025 - Production Hardening
-- ✅ **Python 3.12 Upgrade**: Migrated from Python 3.9 (EOL) to 3.12
+- ✅ **Python 3.11 Upgrade**: Migrated from Python 3.9 (EOL) to 3.11
 - ✅ **Security Hardening**: 10 critical security fixes implemented
   - Timing-attack protection, rate limiting, information leakage prevention
   - Input validation, data integrity (base64url encoding)
@@ -527,6 +527,6 @@ For issues or questions, contact the platform engineering team.
 ---
 
 **Version**: 2.0.0  
-**Last Updated**: November 2025 (Python 3.12, Security Hardened)  
+**Last Updated**: November 2025 (Python 3.11, Security Hardened)  
 **Maintained by**: Platform Engineering Team  
 **Status**: ✅ **PRODUCTION READY**

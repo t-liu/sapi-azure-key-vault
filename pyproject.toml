@@ -31,7 +31,7 @@ disable = [
 max-line-length = 127
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true

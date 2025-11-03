@@ -4,7 +4,7 @@ Get up and running with the Azure Key Vault Properties API in 5 minutes.
 
 ## Prerequisites Checklist
 
-- [ ] Python 3.12+ installed
+- [ ] Python 3.11+ installed
 - [ ] Azure Functions Core Tools v4 installed
 - [ ] Azure CLI installed and logged in (`az login`)
 - [ ] Access to an Azure Key Vault
