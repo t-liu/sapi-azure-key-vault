@@ -214,8 +214,8 @@ jobs:
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --slot staging \
             --query "defaultHostName" -o tsv)
-          echo "url=https://${STAGING_URL}" >> $GITHUB_OUTPUT
-          echo "Staging URL: https://${STAGING_URL}"
+          echo "url=https://${STAGING_URL}/api" >> $GITHUB_OUTPUT
+          echo "Staging URL: https://${STAGING_URL}/api"
 
       - name: Debug - Check deployed functions
         run: |
@@ -298,7 +298,7 @@ jobs:
         run: |
           pytest tests/smoke/ -v --tb=short
         env:
-          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net/api
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
 
@@ -306,7 +306,7 @@ jobs:
         run: |
           python tests/smoke/health_check.py
         env:
-          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net/api
           API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
 
@@ -376,7 +376,7 @@ jobs:
         run: |
           python tests/smoke/pre_swap_validation.py
         env:
-          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api
           API_CLIENT_ID: ${{ secrets.PROD_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.PROD_API_CLIENT_SECRET }}
 
@@ -420,7 +420,7 @@ jobs:
         run: |
           pytest tests/smoke/ -v --tb=short
         env:
-          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net/api
           API_CLIENT_ID: ${{ secrets.PROD_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.PROD_API_CLIENT_SECRET }}
         continue-on-error: true
@@ -430,7 +430,7 @@ jobs:
         run: |
           python tests/smoke/health_check.py --monitor --duration=120
         env:
-          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net/api
           API_CLIENT_ID: ${{ secrets.PROD_API_CLIENT_ID }}
           API_CLIENT_SECRET: ${{ secrets.PROD_API_CLIENT_SECRET }}
         continue-on-error: true
