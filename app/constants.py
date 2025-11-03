@@ -54,7 +54,7 @@ class ErrorMessages:
 
     # Internal Errors
     INTERNAL_ERROR = "An unexpected error occurred"
-    
+
     # Reserved error messages for future enhanced error handling:
     # SERVICE_UNAVAILABLE - for specific Azure service unavailability
     # KEYVAULT_NOT_FOUND - for explicit "no properties found" vs empty results

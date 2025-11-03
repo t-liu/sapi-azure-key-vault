@@ -136,7 +136,9 @@ class KeyVaultService:
             if cached:
                 cache_age = datetime.now() - cached["timestamp"]
                 if cache_age < self._cache_ttl:
-                    logger.info(LogMessages.CACHE_HIT.format(cache_key=cache_key, age=cache_age.seconds))
+                    logger.info(
+                        LogMessages.CACHE_HIT.format(cache_key=cache_key, age=cache_age.seconds)
+                    )
                     return cached["data"].copy()
                 else:
                     logger.debug(f"Cache expired for {cache_key} (age: {cache_age.seconds}s)")
