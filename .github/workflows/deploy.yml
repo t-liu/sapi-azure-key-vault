@@ -146,18 +146,16 @@ jobs:
       - name: Create artifact directory
         run: |
           mkdir -p artifact
-          cp -r app/ host.json requirements.txt .python_packages artifact/
+          cp -r app/ artifact/
+          cp host.json artifact/
+          cp requirements.txt artifact/
 
-          # Debug - show what's being packaged
-          echo "Contents of artifact directory:"
+          # Verify structure
+          echo "=== Artifact contents ==="
           ls -la artifact/
-
-          # Check if function files exist
-          if [ -f "artifact/app/function_app.py" ]; then
-            echo "✅ function_app.py found"
-          else
-            echo "❌ function_app.py NOT found"
-          fi
+          echo ""
+          echo "=== App directory ==="
+          ls -la artifact/app/
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -198,6 +196,8 @@ jobs:
           package: ./artifact
           slot-name: staging
           respect-funcignore: true
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
 
       - name: Wait for deployment to stabilize
         run: sleep 30
