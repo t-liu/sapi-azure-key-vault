@@ -121,7 +121,7 @@ if [ $? -eq 0 ]; then
         --query defaultHostName -o tsv)
     
     print_info "Function App URL: https://${HOSTNAME}"
-    print_info "API Endpoint: https://${HOSTNAME}/api/v1/properties"
+    print_info "API Endpoint: https://${HOSTNAME}/v1/properties"
     
     print_warning "Remember to configure the following app settings in Azure Portal:"
     print_warning "  - VALID_CLIENT_ID"

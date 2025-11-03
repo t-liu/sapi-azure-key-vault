@@ -31,7 +31,7 @@ class TestSmokeTests:
         """Verify API endpoint is reachable"""
         try:
             response = requests.get(
-                f"{API_BASE_URL}/api/v1/properties",
+                f"{API_BASE_URL}/v1/properties",
                 headers=api_headers,
                 params={"env": "smoke", "key": "test"},
                 timeout=10,
@@ -48,7 +48,7 @@ class TestSmokeTests:
     def test_authentication_works(self, api_headers):
         """Verify authentication is working"""
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": "smoke", "key": "test"},
             timeout=10,
@@ -63,7 +63,7 @@ class TestSmokeTests:
     def test_get_endpoint_responds(self, api_headers):
         """Verify GET endpoint is functional"""
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": "smoke", "key": "test"},
             timeout=10,
@@ -81,7 +81,7 @@ class TestSmokeTests:
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/properties", headers=api_headers, json=data, timeout=10
+            f"{API_BASE_URL}/v1/properties", headers=api_headers, json=data, timeout=10
         )
 
         # Should create successfully or return validation error, but not 500
@@ -91,7 +91,7 @@ class TestSmokeTests:
     def test_response_format_is_valid(self, api_headers):
         """Verify API returns valid JSON in correct format"""
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": "smoke", "key": "test"},
             timeout=10,
@@ -107,7 +107,7 @@ class TestSmokeTests:
         """Verify error handling returns proper error responses"""
         # Request without authentication
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             params={"env": "smoke", "key": "test"},
             timeout=10,
         )
@@ -122,7 +122,7 @@ class TestSmokeTests:
 
         start_time = time.time()
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": "smoke", "key": "test"},
             timeout=10,

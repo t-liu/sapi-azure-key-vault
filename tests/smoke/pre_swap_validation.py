@@ -20,7 +20,7 @@ def validate_endpoint_get() -> Tuple[bool, str]:
         headers = {"client_id": API_CLIENT_ID, "client_secret": API_CLIENT_SECRET}
 
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=headers,
             params={"env": "validation", "key": "test"},
             timeout=5,
@@ -58,7 +58,7 @@ def validate_endpoint_post() -> Tuple[bool, str]:
         }
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/properties", headers=headers, json=data, timeout=5
+            f"{API_BASE_URL}/v1/properties", headers=headers, json=data, timeout=5
         )
 
         if response.status_code in [200, 201]:
@@ -77,7 +77,7 @@ def validate_authentication() -> Tuple[bool, str]:
         invalid_headers = {"client_id": "invalid", "client_secret": "invalid"}
 
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=invalid_headers,
             params={"env": "test", "key": "test"},
             timeout=5,
@@ -105,7 +105,7 @@ def validate_error_handling() -> Tuple[bool, str]:
         invalid_data = {"invalid": "data"}
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/properties", headers=headers, json=invalid_data, timeout=5
+            f"{API_BASE_URL}/v1/properties", headers=headers, json=invalid_data, timeout=5
         )
 
         if response.status_code == 400:

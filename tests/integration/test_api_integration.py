@@ -55,7 +55,7 @@ class TestAPIIntegration:
         }
 
         post_response = requests.post(
-            f"{API_BASE_URL}/api/v1/properties", headers=api_headers, json=post_data, timeout=30
+            f"{API_BASE_URL}/v1/properties", headers=api_headers, json=post_data, timeout=30
         )
 
         assert post_response.status_code == 201, f"POST failed: {post_response.text}"
@@ -65,7 +65,7 @@ class TestAPIIntegration:
 
         # GET - Retrieve the same properties
         get_response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": test_env, "key": test_app_key},
             timeout=30,
@@ -91,7 +91,7 @@ class TestAPIIntegration:
         }
 
         requests.post(
-            f"{API_BASE_URL}/api/v1/properties", headers=api_headers, json=initial_data, timeout=30
+            f"{API_BASE_URL}/v1/properties", headers=api_headers, json=initial_data, timeout=30
         )
 
         # Update with PUT
@@ -106,14 +106,14 @@ class TestAPIIntegration:
         }
 
         put_response = requests.put(
-            f"{API_BASE_URL}/api/v1/properties", headers=api_headers, json=update_data, timeout=30
+            f"{API_BASE_URL}/v1/properties", headers=api_headers, json=update_data, timeout=30
         )
 
         assert put_response.status_code == 200, f"PUT failed: {put_response.text}"
 
         # Verify update
         get_response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": test_env, "key": test_app_key},
             timeout=30,
@@ -132,12 +132,12 @@ class TestAPIIntegration:
         }
 
         requests.post(
-            f"{API_BASE_URL}/api/v1/properties", headers=api_headers, json=post_data, timeout=30
+            f"{API_BASE_URL}/v1/properties", headers=api_headers, json=post_data, timeout=30
         )
 
         # Delete
         delete_response = requests.delete(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": test_env, "key": test_app_key},
             timeout=30,
@@ -147,7 +147,7 @@ class TestAPIIntegration:
 
         # Verify deletion
         get_response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": test_env, "key": test_app_key},
             timeout=30,
@@ -164,7 +164,7 @@ class TestAPIAuthentication:
     def test_missing_auth_headers_returns_401(self):
         """Test that missing authentication returns 401"""
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties", params={"env": "qa", "key": "test"}, timeout=30
+            f"{API_BASE_URL}/v1/properties", params={"env": "qa", "key": "test"}, timeout=30
         )
 
         assert response.status_code == 401
@@ -174,7 +174,7 @@ class TestAPIAuthentication:
         invalid_headers = {"client_id": "invalid", "client_secret": "invalid"}
 
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=invalid_headers,
             params={"env": "qa", "key": "test"},
             timeout=30,
@@ -189,7 +189,7 @@ class TestAPIValidation:
     def test_missing_query_params_returns_400(self, api_headers):
         """Test that missing query parameters return 400"""
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=api_headers,
             params={"env": "qa"},  # Missing key
             timeout=30,
@@ -202,7 +202,7 @@ class TestAPIValidation:
         invalid_data = {"invalid_key": "value"}  # Missing 'properties' key
 
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/properties", headers=api_headers, json=invalid_data, timeout=30
+            f"{API_BASE_URL}/v1/properties", headers=api_headers, json=invalid_data, timeout=30
         )
 
         assert response.status_code == 400

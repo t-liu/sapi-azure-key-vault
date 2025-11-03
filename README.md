@@ -110,7 +110,7 @@ az login
 
 ### Base URL
 ```
-/api/v1/properties
+/v1/properties
 ```
 
 ### Authentication
@@ -126,7 +126,7 @@ Retrieve all properties for a specific environment and application.
 
 **Request:**
 ```http
-GET /api/v1/properties?env=qa&key=job-finance-procurement
+GET /v1/properties?env=qa&key=job-finance-procurement
 Headers:
   client_id: your-client-id
   client_secret: your-client-secret
@@ -154,7 +154,7 @@ Create or update properties for one or more applications.
 
 **Request:**
 ```http
-POST /api/v1/properties
+POST /v1/properties
 Headers:
   client_id: your-client-id
   client_secret: your-client-secret
@@ -193,7 +193,7 @@ Update properties (identical behavior to POST).
 
 **Request:**
 ```http
-PUT /api/v1/properties
+PUT /v1/properties
 Headers:
   client_id: your-client-id
   client_secret: your-client-secret
@@ -218,7 +218,7 @@ Delete all properties for a specific environment and application.
 
 **Request:**
 ```http
-DELETE /api/v1/properties?env=qa&key=job-quote-to-cash
+DELETE /v1/properties?env=qa&key=job-quote-to-cash
 Headers:
   client_id: your-client-id
   client_secret: your-client-secret
@@ -259,18 +259,18 @@ All errors follow a consistent format:
 func start
 ```
 
-The API will be available at: `http://localhost:7071/api/v1/properties`
+The API will be available at: `http://localhost:7071/v1/properties`
 
 ### Test Endpoints
 
 ```bash
 # GET request
-curl -X GET "http://localhost:7071/api/v1/properties?env=qa&key=test-app" \
+curl -X GET "http://localhost:7071/v1/properties?env=qa&key=test-app" \
   -H "client_id: your-client-id" \
   -H "client_secret: your-client-secret"
 
 # POST request
-curl -X POST "http://localhost:7071/api/v1/properties" \
+curl -X POST "http://localhost:7071/v1/properties" \
   -H "client_id: your-client-id" \
   -H "client_secret: your-client-secret" \
   -H "Content-Type: application/json" \

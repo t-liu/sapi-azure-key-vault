@@ -152,7 +152,7 @@ class TestCreateErrorResponse:
 
 
 class TestGetPropertiesEndpoint:
-    """Test GET /api/v1/properties endpoint"""
+    """Test GET /v1/properties endpoint"""
 
     @patch("app.function_app.kv_service")
     def test_get_properties_success(self, mock_service, mock_env_vars):
@@ -230,7 +230,7 @@ class TestGetPropertiesEndpoint:
 
 
 class TestPostPropertiesEndpoint:
-    """Test POST /api/v1/properties endpoint"""
+    """Test POST /v1/properties endpoint"""
 
     @patch("app.function_app.kv_service")
     def test_post_properties_success(self, mock_service, mock_env_vars):
@@ -297,7 +297,7 @@ class TestPostPropertiesEndpoint:
 
 
 class TestDeletePropertiesEndpoint:
-    """Test DELETE /api/v1/properties endpoint"""
+    """Test DELETE /v1/properties endpoint"""
 
     @patch("app.function_app.kv_service")
     def test_delete_properties_success(self, mock_service, mock_env_vars):

@@ -64,10 +64,10 @@ Core Tools Version:       4.x
 Function Runtime Version: 4.x
 
 Functions:
-  get_properties: [GET] http://localhost:7071/api/v1/properties
-  post_properties: [POST] http://localhost:7071/api/v1/properties
-  put_properties: [PUT] http://localhost:7071/api/v1/properties
-  delete_properties: [DELETE] http://localhost:7071/api/v1/properties
+  get_properties: [GET] http://localhost:7071/v1/properties
+  post_properties: [POST] http://localhost:7071/v1/properties
+  put_properties: [PUT] http://localhost:7071/v1/properties
+  delete_properties: [DELETE] http://localhost:7071/v1/properties
 ```
 
 ## Step 5: Test the API (30 seconds)
@@ -76,7 +76,7 @@ Functions:
 
 ```bash
 # Create a property
-curl -X POST "http://localhost:7071/api/v1/properties" \
+curl -X POST "http://localhost:7071/v1/properties" \
   -H "client_id: test-client-id" \
   -H "client_secret: test-client-secret" \
   -H "Content-Type: application/json" \
@@ -93,7 +93,7 @@ curl -X POST "http://localhost:7071/api/v1/properties" \
   }'
 
 # Retrieve the property
-curl -X GET "http://localhost:7071/api/v1/properties?env=qa&key=test-app" \
+curl -X GET "http://localhost:7071/v1/properties?env=qa&key=test-app" \
   -H "client_id: test-client-id" \
   -H "client_secret: test-client-secret"
 ```
@@ -175,10 +175,10 @@ chmod +x scripts/deploy.sh
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/v1/properties?env={env}&key={key}` | Retrieve properties |
-| POST | `/api/v1/properties` | Create/update properties |
-| PUT | `/api/v1/properties` | Update properties |
-| DELETE | `/api/v1/properties?env={env}&key={key}` | Delete properties |
+| GET | `/v1/properties?env={env}&key={key}` | Retrieve properties |
+| POST | `/v1/properties` | Create/update properties |
+| PUT | `/v1/properties` | Update properties |
+| DELETE | `/v1/properties?env={env}&key={key}` | Delete properties |
 
 **All endpoints require**:
 - Header: `client_id`

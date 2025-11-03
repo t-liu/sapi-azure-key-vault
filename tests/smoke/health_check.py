@@ -28,7 +28,7 @@ def check_api_health() -> Tuple[bool, str]:
 
         # Simple GET request to verify API is responding
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/properties",
+            f"{API_BASE_URL}/v1/properties",
             headers=headers,
             params={"env": "health", "key": "check"},
             timeout=5,

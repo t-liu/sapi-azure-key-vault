@@ -68,7 +68,7 @@ def validate_auth_headers(req: func.HttpRequest) -> Tuple[bool, str]:
 ```python
 # VULNERABLE CODE
 except Exception as e:
-    logger.error(f"GET /api/v1/properties - Error: {str(e)}", exc_info=True)
+    logger.error(f"GET /v1/properties - Error: {str(e)}", exc_info=True)
     return create_error_response("InternalError", str(e), 500)
 ```
 
@@ -86,10 +86,10 @@ except Exception as e:
 **Fix Applied**:
 ```python
 except AzureError as e:
-    logger.error(f"GET /api/v1/properties - Azure error: {str(e)}", exc_info=True)
+    logger.error(f"GET /v1/properties - Azure error: {str(e)}", exc_info=True)
     return create_error_response("InternalError", "Service temporarily unavailable", 500)
 except Exception as e:
-    logger.error(f"GET /api/v1/properties - Unexpected error: {str(e)}", exc_info=True)
+    logger.error(f"GET /v1/properties - Unexpected error: {str(e)}", exc_info=True)
     return create_error_response("InternalError", "An unexpected error occurred", 500)
 ```
 
@@ -306,7 +306,7 @@ def test_something(self, mock_service):
 ```python
 def _process_properties_request(req: func.HttpRequest, method: str) -> func.HttpResponse:
     """Shared logic for POST and PUT requests"""
-    logger.info(f"{method} /api/v1/properties - Request received")
+    logger.info(f"{method} /v1/properties - Request received")
     
     # ... all shared logic ...
     
@@ -315,11 +315,11 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
     
     return func.HttpResponse(body=response.model_dump_json(), ...)
 
-@app.route(route="api/v1/properties", methods=["POST"], ...)
+@app.route(route="v1/properties", methods=["POST"], ...)
 def post_properties(req: func.HttpRequest) -> func.HttpResponse:
     return _process_properties_request(req, "POST")
 
-@app.route(route="api/v1/properties", methods=["PUT"], ...)
+@app.route(route="v1/properties", methods=["PUT"], ...)
 def put_properties(req: func.HttpRequest) -> func.HttpResponse:
     return _process_properties_request(req, "PUT")
 ```
@@ -704,10 +704,10 @@ def get_or_generate_correlation_id(req: func.HttpRequest) -> str:
         correlation_id = str(uuid.uuid4())
     return correlation_id
 
-@app.route(route="api/v1/properties", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.route(route="v1/properties", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def get_properties(req: func.HttpRequest) -> func.HttpResponse:
     correlation_id = get_or_generate_correlation_id(req)
-    logger.info(f"[{correlation_id}] GET /api/v1/properties - Request received")
+    logger.info(f"[{correlation_id}] GET /v1/properties - Request received")
     
     # ... rest of code ...
     

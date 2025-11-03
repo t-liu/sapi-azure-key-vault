@@ -68,7 +68,7 @@ Raw exception messages were exposed to clients in 500 responses, potentially lea
 ### Solution Implemented
 ```python
 except Exception as e:
-    logger.error(f"GET /api/v1/properties - Error: {str(e)}", exc_info=True)
+    logger.error(f"GET /v1/properties - Error: {str(e)}", exc_info=True)
     # Don't expose internal error details to clients
     return create_error_response("InternalError", "An unexpected error occurred", 500)
 ```
@@ -333,11 +333,11 @@ def _process_properties_request(req: func.HttpRequest, method: str):
     status_code = 201 if method == "POST" else 200  # Only difference!
     return func.HttpResponse(...)
 
-@app.route(route="api/v1/properties", methods=["POST"], ...)
+@app.route(route="v1/properties", methods=["POST"], ...)
 def post_properties(req):
     return _process_properties_request(req, "POST")
 
-@app.route(route="api/v1/properties", methods=["PUT"], ...)
+@app.route(route="v1/properties", methods=["PUT"], ...)
 def put_properties(req):
     return _process_properties_request(req, "PUT")
 ```

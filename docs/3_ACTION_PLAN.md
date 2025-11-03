@@ -51,7 +51,7 @@ def validate_auth_headers(req: func.HttpRequest) -> Tuple[bool, str]:
 Replace `str(e)` with generic messages in all 500 responses:
 ```python
 except Exception as e:
-    logger.error(f"GET /api/v1/properties - Error: {str(e)}", exc_info=True)
+    logger.error(f"GET /v1/properties - Error: {str(e)}", exc_info=True)
     return create_error_response("InternalError", "An unexpected error occurred", 500)
 ```
 

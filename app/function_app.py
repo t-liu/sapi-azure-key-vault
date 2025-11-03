@@ -213,7 +213,7 @@ def validate_query_params(req: func.HttpRequest) -> Tuple[str, str, str]:
     return env, app_key, None
 
 
-@app.route(route="api/v1/properties", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.route(route="v1/properties", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def get_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     GET endpoint to retrieve properties from Key Vault
@@ -232,7 +232,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     # Generate or extract correlation ID
     correlation_id = get_or_generate_correlation_id(req)
-    logger.info(f"[{correlation_id}] GET /api/v1/properties - Request received")
+    logger.info(f"[{correlation_id}] GET /v1/properties - Request received")
 
     # Validate authentication
     is_valid, error_msg = validate_auth_headers(req)
@@ -253,7 +253,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
             responses=[PropertyResponse(env=env, key=app_key, properties=properties)]
         )
 
-        logger.info(f"[{correlation_id}] GET /api/v1/properties - Success for {env}/{app_key}")
+        logger.info(f"[{correlation_id}] GET /v1/properties - Success for {env}/{app_key}")
         return func.HttpResponse(
             body=response.model_dump_json(),
             status_code=200,
@@ -262,7 +262,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     except Exception as e:
-        logger.error(f"[{correlation_id}] GET /api/v1/properties - Error: {str(e)}", exc_info=True)
+        logger.error(f"[{correlation_id}] GET /v1/properties - Error: {str(e)}", exc_info=True)
         # Don't expose internal error details to clients
         return create_error_response(
             "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
@@ -283,7 +283,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
     """
     # Generate or extract correlation ID
     correlation_id = get_or_generate_correlation_id(req)
-    logger.info(f"[{correlation_id}] {method} /api/v1/properties - Request received")
+    logger.info(f"[{correlation_id}] {method} /v1/properties - Request received")
 
     # Validate authentication
     is_valid, error_msg = validate_auth_headers(req)
@@ -327,7 +327,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         status_code = 201 if method == "POST" else 200
 
         logger.info(
-            f"[{correlation_id}] {method} /api/v1/properties - Success, processed {len(responses)} items"
+            f"[{correlation_id}] {method} /v1/properties - Success, processed {len(responses)} items"
         )
         return func.HttpResponse(
             body=response.model_dump_json(),
@@ -338,17 +338,17 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
 
     except ValidationError as e:
         logger.warning(
-            f"[{correlation_id}] {method} /api/v1/properties - Validation error: {str(e)}"
+            f"[{correlation_id}] {method} /v1/properties - Validation error: {str(e)}"
         )
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except ValueError as e:
-        logger.warning(f"[{correlation_id}] {method} /api/v1/properties - Value error: {str(e)}")
+        logger.warning(f"[{correlation_id}] {method} /v1/properties - Value error: {str(e)}")
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except Exception as e:
         logger.error(
-            f"[{correlation_id}] {method} /api/v1/properties - Error: {str(e)}", exc_info=True
+            f"[{correlation_id}] {method} /v1/properties - Error: {str(e)}", exc_info=True
         )
         # Don't expose internal error details to clients
         return create_error_response(
@@ -356,7 +356,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         )
 
 
-@app.route(route="api/v1/properties", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.route(route="v1/properties", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 def post_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     POST endpoint to create/update properties in Key Vault
@@ -385,7 +385,7 @@ def post_properties(req: func.HttpRequest) -> func.HttpResponse:
     return _process_properties_request(req, "POST")
 
 
-@app.route(route="api/v1/properties", methods=["PUT"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.route(route="v1/properties", methods=["PUT"], auth_level=func.AuthLevel.ANONYMOUS)
 def put_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     PUT endpoint to update properties in Key Vault
@@ -414,7 +414,7 @@ def put_properties(req: func.HttpRequest) -> func.HttpResponse:
     return _process_properties_request(req, "PUT")
 
 
-@app.route(route="api/v1/properties", methods=["DELETE"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.route(route="v1/properties", methods=["DELETE"], auth_level=func.AuthLevel.ANONYMOUS)
 def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     DELETE endpoint to remove properties from Key Vault
@@ -433,7 +433,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     # Generate or extract correlation ID
     correlation_id = get_or_generate_correlation_id(req)
-    logger.info(f"[{correlation_id}] DELETE /api/v1/properties - Request received")
+    logger.info(f"[{correlation_id}] DELETE /v1/properties - Request received")
 
     # Validate authentication
     is_valid, error_msg = validate_auth_headers(req)
@@ -458,7 +458,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         logger.info(
-            f"[{correlation_id}] DELETE /api/v1/properties - Success for {env}/{app_key}, deleted {deleted_count} properties"
+            f"[{correlation_id}] DELETE /v1/properties - Success for {env}/{app_key}, deleted {deleted_count} properties"
         )
         return func.HttpResponse(
             body=response.model_dump_json(),
@@ -469,7 +469,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
 
     except Exception as e:
         logger.error(
-            f"[{correlation_id}] DELETE /api/v1/properties - Error: {str(e)}", exc_info=True
+            f"[{correlation_id}] DELETE /v1/properties - Error: {str(e)}", exc_info=True
         )
         # Don't expose internal error details to clients
         return create_error_response(
