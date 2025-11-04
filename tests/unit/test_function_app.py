@@ -659,6 +659,7 @@ class TestHealthCheckEndpoint:
         body = json.loads(response.get_body())
         assert body["status"] == "healthy"
         assert body["version"] == "2.0.0"
+        assert "timestamp" in body
         assert body["checks"]["key_vault"] == "healthy"
 
     @patch("function_app.kv_service")
