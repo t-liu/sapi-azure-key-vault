@@ -85,17 +85,32 @@ class PropertiesRequest(BaseModel):
 
 
 class PropertyResponse(BaseModel):
-    """Model for individual property response"""
+    """Model for individual property response (used by GET endpoint)"""
 
     env: str
     key: str
     properties: Dict[str, str]
 
 
+class PropertySetResponse(BaseModel):
+    """Model for POST/PUT operation responses"""
+
+    environment: str
+    key: str
+    code: int
+    message: str
+
+
 class PropertiesResponse(BaseModel):
-    """Model for response body"""
+    """Model for GET response body"""
 
     responses: List[PropertyResponse]
+
+
+class PropertiesSetResponse(BaseModel):
+    """Model for POST/PUT response body"""
+
+    responses: List[PropertySetResponse]
 
 
 class DeleteResponse(BaseModel):

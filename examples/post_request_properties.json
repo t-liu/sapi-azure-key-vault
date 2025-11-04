@@ -5,7 +5,8 @@
           "key": "job-costpoint-ivalua",
           "properties": {
             "https.port": "443",
-            "other-app-secrets": "thisTheNewSecretId"
+            "other-app-secrets": "thisTheNewSecretId",
+            "secure.properties": "costpoint-secrets,ivalua-secrets"
           }
         }
     ]

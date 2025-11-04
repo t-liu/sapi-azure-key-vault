@@ -4,7 +4,8 @@
             "env": "qa",
             "key": "ei-sapi-srs-crm-job-util",
             "properties": {
-                "https.port": "443"
+                "https.port": "443",
+                "secure.properties": "crm-secrets"
             }
         }
     ]

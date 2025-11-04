@@ -1,0 +1,12 @@
+{
+    "responses": [
+        {
+            "env": "qa",
+            "key": "crm-secrets",
+            "properties": {
+                "crm.client.id": "test",
+                "crm.client.secret": "123"
+            }
+        }
+    ]
+}

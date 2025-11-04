@@ -14,6 +14,10 @@ from function_app import (
     post_properties,
     put_properties,
     delete_properties,
+    get_secure_properties,
+    post_secure_properties,
+    put_secure_properties,
+    delete_secure_properties,
     health_check,
     rate_limiter,
 )
@@ -256,6 +260,13 @@ class TestPostPropertiesEndpoint:
 
         # Assert
         assert response.status_code == 201
+        body = json.loads(response.get_body())
+        assert "responses" in body
+        assert len(body["responses"]) == 1
+        assert body["responses"][0]["environment"] == "qa"
+        assert body["responses"][0]["key"] == "test-app"
+        assert body["responses"][0]["code"] == 200
+        assert body["responses"][0]["message"] == "Properties Posted Successfully"
 
     def test_post_properties_missing_top_level_key(self, mock_env_vars):
         """Test POST request without 'properties' top-level key"""
@@ -296,6 +307,46 @@ class TestPostPropertiesEndpoint:
         assert response.status_code == 400
 
 
+class TestPutPropertiesEndpoint:
+    """Test PUT /v1/properties endpoint"""
+
+    @patch("function_app.kv_service")
+    def test_put_properties_success(self, mock_service, mock_env_vars):
+        """Test successful PUT request"""
+        # Setup mock service
+        mock_service.set_properties.return_value = {"updated-key": "updated-value"}
+
+        # Create mock request
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.get_json.return_value = {
+            "properties": [
+                {
+                    "environment": "qa",
+                    "key": "test-app",
+                    "properties": {"updated-key": "updated-value"},
+                }
+            ]
+        }
+
+        # Execute
+        response = put_properties(req)
+
+        # Assert
+        assert response.status_code == 200
+        body = json.loads(response.get_body())
+        assert "responses" in body
+        assert len(body["responses"]) == 1
+        assert body["responses"][0]["environment"] == "qa"
+        assert body["responses"][0]["key"] == "test-app"
+        assert body["responses"][0]["code"] == 200
+        assert body["responses"][0]["message"] == "Properties Updated Successfully"
+
+
 class TestDeletePropertiesEndpoint:
     """Test DELETE /v1/properties endpoint"""
 
@@ -321,6 +372,270 @@ class TestDeletePropertiesEndpoint:
         assert response.status_code == 200
         body = json.loads(response.get_body())
         assert "Successfully deleted" in body["message"]
+
+
+class TestSecurePropertiesEndpoints:
+    """Test secure properties endpoints"""
+
+    @patch("function_app.kv_service")
+    def test_get_secure_properties_success(self, mock_service, mock_env_vars):
+        """Test successful GET secure properties request"""
+        # Setup mock service
+        mock_service.get_properties.return_value = {
+            "crm.client.id": "test-id",
+            "crm.client.secret": "test-secret",
+        }
+
+        # Create mock request
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.params = {"env": "qa", "key": "crm-secrets"}
+
+        # Execute
+        response = get_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 200
+        body = json.loads(response.get_body())
+        assert "responses" in body
+        assert body["responses"][0]["env"] == "qa"
+        assert body["responses"][0]["key"] == "crm-secrets"
+        assert "crm.client.id" in body["responses"][0]["properties"]
+
+    @patch("function_app.kv_service")
+    def test_post_secure_properties_success(self, mock_service, mock_env_vars):
+        """Test successful POST secure properties request"""
+        # Setup mock service
+        mock_service.set_properties.return_value = {"crm.client.id": "test-id"}
+
+        # Create mock request
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.get_json.return_value = {
+            "properties": [
+                {
+                    "environment": "qa",
+                    "key": "crm-secrets",
+                    "properties": {"crm.client.id": "test-id", "crm.client.secret": "test-secret"},
+                }
+            ]
+        }
+
+        # Execute
+        response = post_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 201
+        body = json.loads(response.get_body())
+        assert "responses" in body
+        assert len(body["responses"]) == 1
+        assert body["responses"][0]["environment"] == "qa"
+        assert body["responses"][0]["key"] == "crm-secrets"
+        assert body["responses"][0]["code"] == 200
+        assert body["responses"][0]["message"] == "Secure Properties Posted Successfully"
+
+    @patch("function_app.kv_service")
+    def test_put_secure_properties_success(self, mock_service, mock_env_vars):
+        """Test successful PUT secure properties request"""
+        # Setup mock service
+        mock_service.set_properties.return_value = {"crm.client.id": "updated-id"}
+
+        # Create mock request
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.get_json.return_value = {
+            "properties": [
+                {
+                    "environment": "qa",
+                    "key": "crm-secrets",
+                    "properties": {
+                        "crm.client.id": "updated-id",
+                        "crm.client.secret": "updated-secret",
+                    },
+                }
+            ]
+        }
+
+        # Execute
+        response = put_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 200
+        body = json.loads(response.get_body())
+        assert "responses" in body
+        assert len(body["responses"]) == 1
+        assert body["responses"][0]["environment"] == "qa"
+        assert body["responses"][0]["key"] == "crm-secrets"
+        assert body["responses"][0]["code"] == 200
+        assert body["responses"][0]["message"] == "Secure Properties Updated Successfully"
+
+    @patch("function_app.kv_service")
+    def test_delete_secure_properties_success(self, mock_service, mock_env_vars):
+        """Test successful DELETE secure properties request"""
+        # Setup mock service
+        mock_service.delete_properties.return_value = 2
+
+        # Create mock request
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.params = {"env": "qa", "key": "crm-secrets"}
+
+        # Execute
+        response = delete_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 200
+        body = json.loads(response.get_body())
+        assert "Successfully deleted secure properties" in body["message"]
+        assert body["env"] == "qa"
+        assert body["key"] == "crm-secrets"
+        assert body["deleted_count"] == 2
+
+    @patch("function_app.kv_service")
+    def test_post_secure_properties_with_reserved_key_rejected(self, mock_service, mock_env_vars):
+        """Test that secure properties with 'secure.properties' key are rejected"""
+        # Create mock request with reserved key
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.get_json.return_value = {
+            "properties": [
+                {
+                    "environment": "qa",
+                    "key": "crm-secrets",
+                    "properties": {
+                        "crm.client.id": "test-id",
+                        "secure.properties": "other-secrets",  # Reserved key!
+                    },
+                }
+            ]
+        }
+
+        # Execute
+        response = post_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 400
+        body = json.loads(response.get_body())
+        assert body["error"] == "ValidationError"
+        assert "cannot contain 'secure.properties' key" in body["message"]
+        # Verify set_properties was never called
+        mock_service.set_properties.assert_not_called()
+
+    @patch("function_app.kv_service")
+    def test_put_secure_properties_with_reserved_key_rejected(self, mock_service, mock_env_vars):
+        """Test that secure properties with 'secure.properties' key are rejected on PUT"""
+        # Create mock request with reserved key
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.get_json.return_value = {
+            "properties": [
+                {
+                    "environment": "prod",
+                    "key": "app-secrets",
+                    "properties": {
+                        "api.key": "test-key",
+                        "secure.properties": "crm-secrets",  # Reserved key!
+                    },
+                }
+            ]
+        }
+
+        # Execute
+        response = put_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 400
+        body = json.loads(response.get_body())
+        assert body["error"] == "ValidationError"
+        assert "cannot contain 'secure.properties' key" in body["message"]
+        # Verify set_properties was never called
+        mock_service.set_properties.assert_not_called()
+
+    @patch("function_app.kv_service")
+    def test_post_secure_properties_empty_rejected(self, mock_service, mock_env_vars):
+        """Test that empty secure properties are rejected"""
+        # Create mock request with empty properties
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.get_json.return_value = {
+            "properties": [
+                {
+                    "environment": "qa",
+                    "key": "empty-secrets",
+                    "properties": {},  # Empty!
+                }
+            ]
+        }
+
+        # Execute
+        response = post_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 400
+        body = json.loads(response.get_body())
+        assert body["error"] == "ValidationError"
+        assert "cannot be empty" in body["message"]
+        # Verify set_properties was never called
+        mock_service.set_properties.assert_not_called()
+
+    @patch("function_app.kv_service")
+    def test_put_secure_properties_empty_rejected(self, mock_service, mock_env_vars):
+        """Test that empty secure properties are rejected on PUT"""
+        # Create mock request with empty properties
+        req = Mock(spec=func.HttpRequest)
+        req.headers = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "X-Forwarded-For": "1.2.3.4",
+        }
+        req.get_json.return_value = {
+            "properties": [
+                {
+                    "environment": "prod",
+                    "key": "empty-secrets",
+                    "properties": {},  # Empty!
+                }
+            ]
+        }
+
+        # Execute
+        response = put_secure_properties(req)
+
+        # Assert
+        assert response.status_code == 400
+        body = json.loads(response.get_body())
+        assert body["error"] == "ValidationError"
+        assert "cannot be empty" in body["message"]
+        # Verify set_properties was never called
+        mock_service.set_properties.assert_not_called()
 
 
 class TestHealthCheckEndpoint:
