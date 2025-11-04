@@ -216,14 +216,16 @@ jobs:
             --query "defaultHostName" -o tsv)
           echo "url=https://${STAGING_URL}" >> $GITHUB_OUTPUT
           echo "Staging URL: https://${STAGING_URL}"
-
-      - name: Debug - Check deployed functions
+      
+      - name: Verify deployed functions
         run: |
-          echo "Checking deployed functions..."
-          az functionapp function list \
+          for url in $(az functionapp function list \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --query "[].{name:name, href:href}" -o json > deployed-functions.json
+            --query "[].href" -o tsv); do
+            echo "Testing $url"
+            curl -sf "$url" || exit 1
+          done
 
   # ============================================================================
   # STAGE 5: Integration Tests (Staging)
@@ -247,7 +249,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      - name: Run Integration Tests
+        run: |
+          pytest tests/integration/ -v --tb=short
+        env:
+          API_BASE_URL: ${{ needs.deploy-staging.outputs.staging-url }}/api
+          API_CLIENT_ID: ${{ secrets.TEST_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
+          ENVIRONMENT: staging
 
+      - name: Check Function App Logs
+        if: always()
+        run: |
+          echo "Fetching recent logs from Function App..."
+          az functionapp log tail \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging || true
+
+      - name: Upload Integration Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results/
 
   # ============================================================================
   # STAGE 6: Smoke/Canary Tests (Staging)
