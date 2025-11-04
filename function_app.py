@@ -79,7 +79,7 @@ def health_check(req: func.HttpRequest) -> func.HttpResponse:
 
     health_status = {
         "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(timespec='milliseconds'),
+        "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
         "version": Config.APP_VERSION,
         "checks": {},
     }
@@ -482,12 +482,13 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
             "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
         )
 
+
 @app.function_name(name="get_secure_properties")
 @app.route(route="v1/properties/secure", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def get_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     GET endpoint to retrieve secure properties from Key Vault
-    
+
     Secure properties are shared secrets that can be referenced by multiple applications.
     For example, CRM credentials stored once and referenced by multiple services.
 
@@ -551,7 +552,7 @@ def get_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
 def post_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     POST endpoint to create/update secure properties in Key Vault
-    
+
     Secure properties are shared secrets that can be referenced by multiple applications.
 
     Headers:
@@ -583,7 +584,7 @@ def post_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
 def put_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     PUT endpoint to update secure properties in Key Vault
-    
+
     Secure properties are shared secrets that can be referenced by multiple applications.
 
     Headers:
@@ -615,7 +616,7 @@ def put_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
 def delete_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
     """
     DELETE endpoint to remove secure properties from Key Vault
-    
+
     Secure properties are shared secrets that can be referenced by multiple applications.
 
     Query Parameters:
@@ -679,7 +680,7 @@ def delete_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
 def _process_secure_properties_request(req: func.HttpRequest, method: str) -> func.HttpResponse:
     """
     Shared logic for POST and PUT secure properties requests
-    
+
     Args:
         req: HTTP request object
         method: HTTP method name ("POST" or "PUT") for logging and status codes
@@ -724,7 +725,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
                     400,
                     correlation_id,
                 )
-            
+
             # Validate no reserved key names (prevents confusion and circular references)
             # Secure properties should contain actual secrets, not references to other secure properties
             if "secure.properties" in item.properties:
@@ -735,7 +736,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
                     400,
                     correlation_id,
                 )
-            
+
             # Set secure properties in Key Vault
             kv_service.set_properties(item.environment, item.key, item.properties)
 
@@ -774,9 +775,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except ValueError as e:
-        logger.warning(
-            f"[{correlation_id}] {method} /v1/properties/secure - Value error: {str(e)}"
-        )
+        logger.warning(f"[{correlation_id}] {method} /v1/properties/secure - Value error: {str(e)}")
         return create_error_response("ValidationError", str(e), 400, correlation_id)
 
     except Exception as e:
