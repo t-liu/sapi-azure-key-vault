@@ -11,7 +11,6 @@ This API provides a secure interface to manage application configuration propert
 ```
 sapi-azure-key-vault/
 ├── app/                       # Application code
-│   ├── function_app.py        # Azure Function HTTP triggers
 │   ├── keyvault_service.py    # Service layer for Key Vault
 │   ├── models.py              # Pydantic validation models
 │   ├── rate_limiter.py        # Thread safe rate limiter
@@ -28,6 +27,7 @@ sapi-azure-key-vault/
 │   └── deploy.sh              # Deployment script
 ├── config/                    # Configuration files
 │   └── local.settings.template.json
+├── function_app.py            # Azure Function HTTP triggers
 ├── .github/workflows/         # CI/CD pipeline
 ├── requirements.txt           # Production dependencies
 ├── requirements-dev.txt       # Development dependencies
