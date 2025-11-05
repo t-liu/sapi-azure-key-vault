@@ -146,20 +146,36 @@ jobs:
       - name: Create artifact directory
         run: |
           mkdir -p artifact
+          
+          # Copy function_app.py to root
           cp function_app.py artifact/
-          cp -r app/ artifact/
+          
+          # Copy app module
+          mkdir -p artifact/app
+          cp app/__init__.py artifact/app/
+          cp app/keyvault_service.py artifact/app/
+          cp app/models.py artifact/app/
+          cp app/rate_limiter.py artifact/app/
+          cp app/constants.py artifact/app/
+          
+          # Copy config
           cp host.json artifact/
           cp requirements.txt artifact/
-          cp -r .python_packages/lib/site-packages/* artifact/
-
-          # Verify structure
-          echo "=== Artifact contents (root) ==="
-          ls -la artifact/
+          
+          echo "=== ARTIFACT STRUCTURE ==="
+          find artifact -type f | sort
+          
           echo ""
-          echo "=== App directory (supporting modules) ==="
+          echo "=== VERIFY function_app.py at root ==="
+          ls -la artifact/function_app.py
+          
+          echo ""
+          echo "=== CHECK imports in function_app.py ==="
+          head -30 artifact/function_app.py | grep "^from\|^import"
+          
+          echo ""
+          echo "=== VERIFY app module files ==="
           ls -la artifact/app/
-          echo ""
-          echo "✅ function_app.py is at root level (required for Azure Functions V2)"
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -216,6 +232,42 @@ jobs:
             --query "defaultHostName" -o tsv)
           echo "url=https://${STAGING_URL}" >> $GITHUB_OUTPUT
           echo "Staging URL: https://${STAGING_URL}"
+      
+      - name: Debug - Check deployed file structure via Kudu
+        run: |
+          echo "=== Getting Kudu credentials ==="
+          CREDS=$(az webapp deployment list-publishing-credentials \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
+            --query "{username:publishingUserName, password:publishingPassword}" -o json)
+          
+          USERNAME=$(echo $CREDS | jq -r .username)
+          PASSWORD=$(echo $CREDS | jq -r .password)
+          
+          echo "=== Checking wwwroot structure ==="
+          curl -u "$USERNAME:$PASSWORD" \
+            "https://sapi-azure-key-vault-staging-fahycgfgfpewd7hd.scm.canadacentral-01.azurewebsites.net/api/vfs/site/wwwroot/" \
+            | jq '.'
+          
+          echo "=== Checking if function_app.py exists at root ==="
+          curl -u "$USERNAME:$PASSWORD" \
+            "https://sapi-azure-key-vault-staging-fahycgfgfpewd7hd.scm.canadacentral-01.azurewebsites.net/api/vfs/site/wwwroot/function_app.py" \
+            -I | head -5
+
+      - name: Debug - Check Function Host logs
+        run: |
+          echo "=== Fetching Function Host logs ==="
+          az webapp log download \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
+            --log-file logs.zip || true
+          
+          if [ -f logs.zip ]; then
+            unzip -p logs.zip */error* 2>/dev/null || echo "No error logs"
+            unzip -p logs.zip */host* 2>/dev/null | tail -50 || echo "No host logs"
+          fi
       
       - name: Verify deployed functions (DEBUG)
         run: |
