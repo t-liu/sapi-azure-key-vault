@@ -546,6 +546,7 @@ def get_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
             "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
         )
 
+
 def _process_secure_properties_request(req: func.HttpRequest, method: str) -> func.HttpResponse:
     """
     Shared logic for POST and PUT secure properties requests
@@ -785,4 +786,3 @@ def delete_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
         return create_error_response(
             "InternalError", ErrorMessages.INTERNAL_ERROR, 500, correlation_id
         )
-
