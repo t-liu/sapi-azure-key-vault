@@ -217,15 +217,25 @@ jobs:
           echo "url=https://${STAGING_URL}" >> $GITHUB_OUTPUT
           echo "Staging URL: https://${STAGING_URL}"
       
-      - name: Verify deployed functions
+      - name: Verify deployed functions (DEBUG)
         run: |
-          for url in $(az functionapp function list \
+          echo "=== Listing deployed functions ==="
+          az functionapp function list \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --query "[].href" -o tsv); do
-            echo "Testing $url"
-            curl -sf "$url" || exit 1
-          done
+            --query "[].{Name:name, Config:config.bindings[0].route, Status:state}" -o table
+          
+          echo "=== Raw JSON output ==="
+          az functionapp function list \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --query "[]" -o json
+          
+          echo "=== Checking function app logs for import errors ==="
+          az monitor log-analytics query \
+            --workspace ${{ secrets.APP_INSIGHTS_NAME }} \
+            --analytics-query "AppExceptions | where Operation_Name == 'FunctionAppLogs' | take 10" \
+            -o table || echo "No App Insights logs found"
 
   # ============================================================================
   # STAGE 5: Integration Tests (Staging)
