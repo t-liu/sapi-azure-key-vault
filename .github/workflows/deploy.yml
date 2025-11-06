@@ -209,6 +209,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_STAGING }}
 
+      - name: Set Function App to Python 3.11
+        run: |
+          az functionapp config set \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
+            --linux-fx-version "PYTHON|3.11"
+
       - name: Deploy to Azure Function (Staging Slot)
         uses: Azure/functions-action@v1
         with:
