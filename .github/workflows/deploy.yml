@@ -227,7 +227,7 @@ jobs:
           enable-oryx-build: true
 
       - name: Wait for deployment to stabilize
-        run: sleep 30
+        run: sleep 45
 
       - name: Get Staging Slot URL
         id: get-url
