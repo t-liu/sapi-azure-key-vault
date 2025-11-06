@@ -216,7 +216,6 @@ jobs:
           package: ./artifact
           slot-name: staging
           respect-funcignore: true
-          scm-do-build-during-deployment: true
           enable-oryx-build: true
 
       - name: Wait for deployment to stabilize
@@ -247,12 +246,12 @@ jobs:
           
           echo "=== Checking wwwroot structure ==="
           curl -u "$USERNAME:$PASSWORD" \
-            "https://sapi-azure-key-vault.scm.azurewebsites.net/api/slots/staging/vfs/site/wwwroot/" \
+            "https://sapi-azure-key-vault-staging-fahycgfgfpewd7hd.scm.canadacentral-01.azurewebsites.net/api/vfs/site/wwwroot/" \
             | jq '.'
           
           echo "=== Checking if function_app.py exists at root ==="
           curl -u "$USERNAME:$PASSWORD" \
-            "https://sapi-azure-key-vault.scm.azurewebsites.net/api/slots/staging/vfs/site/wwwroot/function_app.py" \
+            "https://sapi-azure-key-vault-staging-fahycgfgfpewd7hd.scm.canadacentral-01.azurewebsites.net/api/vfs/site/wwwroot/function_app.py" \
             -I | head -5
 
       - name: Debug - Check Function Host logs
