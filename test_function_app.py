@@ -4,6 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 app = func.FunctionApp()
 
+
 @app.function_name(name="test_hello")
 @app.route(route="hello", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def test_hello(req: func.HttpRequest) -> func.HttpResponse:
