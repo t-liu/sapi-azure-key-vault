@@ -252,7 +252,13 @@ jobs:
           
           USERNAME=$(echo $CREDS | jq -r .username)
           PASSWORD=$(echo $CREDS | jq -r .password)
-          
+
+          echo ""
+          echo "=== Checking if app/ modules exist ==="
+          curl -s -u "$USERNAME:$PASSWORD" \
+            "https://sapi-azure-key-vault-staging.azurewebsites.net/api/vfs/site/wwwroot/app/" \
+            | jq -r '.[].name' || echo "app/ directory missing"
+
           echo "=== Checking wwwroot structure ==="
           curl -u "$USERNAME:$PASSWORD" \
             "sapi-azure-key-vault-staging.azurewebsites.net/api/vfs/site/wwwroot/" \
