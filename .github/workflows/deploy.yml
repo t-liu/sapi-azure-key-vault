@@ -254,12 +254,12 @@ jobs:
           
           echo "=== Checking wwwroot structure ==="
           curl -u "$USERNAME:$PASSWORD" \
-            "https://sapi-azure-key-vault-staging-fahycgfgfpewd7hd.scm.canadacentral-01.azurewebsites.net/api/vfs/site/wwwroot/" \
+            "sapi-azure-key-vault-staging.azurewebsites.net/api/vfs/site/wwwroot/" \
             | jq '.'
           
           echo "=== Checking if function_app.py exists at root ==="
           curl -u "$USERNAME:$PASSWORD" \
-            "https://sapi-azure-key-vault-staging-fahycgfgfpewd7hd.scm.canadacentral-01.azurewebsites.net/api/vfs/site/wwwroot/function_app.py" \
+            "sapi-azure-key-vault-staging.azurewebsites.net/api/vfs/site/wwwroot/function_app.py" \
             -I | head -5
 
       - name: Debug - Check Function Host logs
