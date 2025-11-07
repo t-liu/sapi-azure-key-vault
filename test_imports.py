@@ -13,27 +13,32 @@ app = func.FunctionApp()
 # Test each import individually
 try:
     from app.constants import Config, ErrorMessages, HTTPHeaders, LogMessages
+
     logger.info("✅ Constants imported")
 except Exception as e:
     logger.error(f"❌ Constants import failed: {e}")
 
 try:
     from app.models import PropertiesRequest
+
     logger.info("✅ Models imported")
 except Exception as e:
     logger.error(f"❌ Models import failed: {e}")
 
 try:
     from app.keyvault_service import KeyVaultService
+
     logger.info("✅ KeyVaultService imported")
 except Exception as e:
     logger.error(f"❌ KeyVaultService import failed: {e}")
 
 try:
     from app.rate_limiter import RateLimiter
+
     logger.info("✅ RateLimiter imported")
 except Exception as e:
     logger.error(f"❌ RateLimiter import failed: {e}")
+
 
 @app.function_name(name="test_imports")
 @app.route(route="test-imports", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
