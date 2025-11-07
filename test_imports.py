@@ -5,6 +5,7 @@ import secrets
 import uuid
 import azure.functions as func
 from typing import Tuple
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 app = func.FunctionApp()
