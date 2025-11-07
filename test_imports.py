@@ -14,15 +14,6 @@ from pydantic import ValidationError
 
 from app.keyvault_service import KeyVaultService
 from app.rate_limiter import RateLimiter
-from app.models import (
-    PropertiesRequest,
-    PropertiesResponse,
-    PropertyResponse,
-    PropertySetResponse,
-    PropertiesSetResponse,
-    DeleteResponse,
-    ErrorResponse,
-)
 
 from app.constants import Config, ErrorMessages, HTTPHeaders, LogMessages
 
