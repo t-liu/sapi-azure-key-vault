@@ -4,15 +4,13 @@ import logging
 import secrets
 import uuid
 import azure.functions as func
-from typing import Tuple
-from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 app = func.FunctionApp()
 
 # Test each import individually
 try:
-    from app.constants import Config, ErrorMessages
+    from app.constants import Config
 
     logger.info("✅ Constants imported")
 except Exception as e:
