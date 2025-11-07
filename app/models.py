@@ -3,7 +3,7 @@ Pydantic models for request validation with Azure Key Vault limits
 """
 
 from typing import Dict, List
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, validator
 from app.constants import Config
 
 
@@ -24,7 +24,7 @@ class PropertyItem(BaseModel):
     )
     properties: Dict[str, str] = Field(..., description="Key-value pairs of properties")
 
-    @field_validator("environment", "key")
+    @validator("environment", "key")
     @classmethod
     def validate_alphanumeric(cls, v):
         """Validate environment and key contain only safe characters"""
@@ -39,7 +39,7 @@ class PropertyItem(BaseModel):
 
         return v.strip()
 
-    @field_validator("properties")
+    @validator("properties")
     @classmethod
     def validate_properties(cls, v):
         """Validate properties dictionary with Azure Key Vault limits"""
