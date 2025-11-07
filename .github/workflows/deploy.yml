@@ -148,8 +148,8 @@ jobs:
           mkdir -p artifact
           
           # Copy function_app.py to root
-          # cp function_app.py artifact/
-          cp test_imports.py artifact/function_app.py
+          cp function_app.py artifact/
+          # cp test_imports.py artifact/function_app.py
           
           # Copy app module
           mkdir -p artifact/app
