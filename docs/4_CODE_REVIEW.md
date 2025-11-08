@@ -313,7 +313,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
     # Use 201 Created for POST, 200 OK for PUT
     status_code = 201 if method == "POST" else 200
     
-    return func.HttpResponse(body=response.model_dump_json(), ...)
+    return func.HttpResponse(body=response.json(), ...)
 
 @app.route(route="v1/properties", methods=["POST"], ...)
 def post_properties(req: func.HttpRequest) -> func.HttpResponse:
@@ -665,7 +665,7 @@ response = DeleteResponse(
 )
 
 return func.HttpResponse(
-    body=response.model_dump_json(),
+    body=response.json(),
     status_code=200,
     mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
     headers={HTTPHeaders.CORRELATION_ID: correlation_id}
@@ -712,7 +712,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
     # ... rest of code ...
     
     return func.HttpResponse(
-        body=response.model_dump_json(),
+        body=response.json(),
         status_code=200,
         mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
         headers={HTTPHeaders.CORRELATION_ID: correlation_id}
@@ -754,23 +754,23 @@ errors = []
 for idx, item in enumerate(request_data.properties):
     try:
         updated_properties = service.set_properties(
-            item.environment,
+            item.dict()["environment"],
             item.key,
             item.properties
         )
         
         responses.append(
             PropertyResponse(
-                env=item.environment,
+                env=item.dict()["environment"],
                 key=item.key,
                 properties=updated_properties
             )
         )
     except Exception as e:
-        logger.error(f"Failed to set properties for {item.environment}/{item.key}: {str(e)}")
+        logger.error(f"Failed to set properties for {item.dict()["environment"]}/{item.key}: {str(e)}")
         errors.append({
             "index": idx,
-            "environment": item.environment,
+            "environment": item.dict()["environment"],
             "key": item.key,
             "error": "Failed to set properties"
         })
@@ -783,7 +783,7 @@ elif errors:
     # Partial failure
     return func.HttpResponse(
         body=json.dumps({
-            "responses": [r.model_dump() for r in responses],
+            "responses": [r.dict() for r in responses],
             "errors": errors,
             "partial_success": True
         }),
@@ -794,7 +794,7 @@ else:
     # Total success
     response = PropertiesResponse(responses=responses)
     return func.HttpResponse(
-        body=response.model_dump_json(),
+        body=response.json(),
         status_code=201,
         mimetype="application/json"
     )
@@ -1488,11 +1488,11 @@ Modified `_process_properties_request()` helper function:
 # Before
 for item in request_data.properties:
     updated_properties = kv_service.set_properties(
-        item.environment, item.key, item.properties
+        item.dict()["environment"], item.key, item.properties
     )
     
     responses.append(
-        PropertyResponse(env=item.environment, key=item.key, properties=updated_properties)
+        PropertyResponse(env=item.dict()["environment"], key=item.key, properties=updated_properties)
     )
 
 response = PropertiesResponse(responses=responses)
@@ -1500,7 +1500,7 @@ response = PropertiesResponse(responses=responses)
 # After
 for item in request_data.properties:
     # Set properties in Key Vault (no need to capture return value)
-    kv_service.set_properties(item.environment, item.key, item.properties)
+    kv_service.set_properties(item.dict()["environment"], item.key, item.properties)
     
     # Build status response
     message = (
@@ -1510,7 +1510,7 @@ for item in request_data.properties:
     )
     responses.append(
         PropertySetResponse(
-            environment=item.environment, key=item.key, code=200, message=message
+            environment=item.dict()["environment"], key=item.key, code=200, message=message
         )
     )
 

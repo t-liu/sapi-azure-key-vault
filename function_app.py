@@ -187,7 +187,7 @@ def create_error_response(
         headers[HTTPHeaders.CORRELATION_ID] = correlation_id
 
     return func.HttpResponse(
-        body=error_response.model_dump_json(),
+        body=error_response.json(),
         status_code=status_code,
         mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
         headers=headers,
@@ -259,7 +259,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
 
         logger.info(f"[{correlation_id}] GET /v1/properties - Success for {env}/{app_key}")
         return func.HttpResponse(
-            body=response.model_dump_json(),
+            body=response.json(),
             status_code=200,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
             headers={HTTPHeaders.CORRELATION_ID: correlation_id},
@@ -315,7 +315,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
 
         for item in request_data.properties:
             # Set properties in Key Vault
-            kv_service.set_properties(item.environment, item.key, item.properties)
+            kv_service.set_properties(item.dict()["environment"], item.key, item.properties)
 
             # Build status response
             message = (
@@ -325,7 +325,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
             )
             responses.append(
                 PropertySetResponse(
-                    environment=item.environment, key=item.key, code=200, message=message
+                    environment=item.dict()["environment"], key=item.key, code=200, message=message
                 )
             )
 
@@ -339,7 +339,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
             f"[{correlation_id}] {method} /v1/properties - Success, processed {len(responses)} items"
         )
         return func.HttpResponse(
-            body=response.model_dump_json(),
+            body=response.json(),
             status_code=status_code,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
             headers={HTTPHeaders.CORRELATION_ID: correlation_id},
@@ -469,7 +469,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
             f"[{correlation_id}] DELETE /v1/properties - Success for {env}/{app_key}, deleted {deleted_count} properties"
         )
         return func.HttpResponse(
-            body=response.model_dump_json(),
+            body=response.json(),
             status_code=200,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
             headers={HTTPHeaders.CORRELATION_ID: correlation_id},
@@ -531,7 +531,7 @@ def get_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
             f"[{correlation_id}] GET /v1/properties/secure - Success for {env}/{secure_key}"
         )
         return func.HttpResponse(
-            body=response.model_dump_json(),
+            body=response.json(),
             status_code=200,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
             headers={HTTPHeaders.CORRELATION_ID: correlation_id},
@@ -608,7 +608,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
                 )
 
             # Set secure properties in Key Vault
-            kv_service.set_properties(item.environment, item.key, item.properties)
+            kv_service.set_properties(item.dict()["environment"], item.key, item.properties)
 
             # Build status response
             message = (
@@ -618,7 +618,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
             )
             responses.append(
                 PropertySetResponse(
-                    environment=item.environment, key=item.key, code=200, message=message
+                    environment=item.dict()["environment"], key=item.key, code=200, message=message
                 )
             )
 
@@ -632,7 +632,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
             f"[{correlation_id}] {method} /v1/properties/secure - Success, processed {len(responses)} items"
         )
         return func.HttpResponse(
-            body=response.model_dump_json(),
+            body=response.json(),
             status_code=status_code,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
             headers={HTTPHeaders.CORRELATION_ID: correlation_id},
@@ -772,7 +772,7 @@ def delete_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
             f"[{correlation_id}] DELETE /v1/properties/secure - Success for {env}/{secure_key}, deleted {deleted_count} properties"
         )
         return func.HttpResponse(
-            body=response.model_dump_json(),
+            body=response.json(),
             status_code=200,
             mimetype=HTTPHeaders.CONTENT_TYPE_JSON,
             headers={HTTPHeaders.CORRELATION_ID: correlation_id},

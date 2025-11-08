@@ -3,28 +3,18 @@ Pydantic models for request validation with Azure Key Vault limits
 """
 
 from typing import Dict, List
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator, conlist, constr
 from app.constants import Config
 
 
 class PropertyItem(BaseModel):
     """Model for a single property item in POST/PUT requests"""
 
-    environment: str = Field(
-        ...,
-        min_length=1,
-        max_length=Config.MAX_ENVIRONMENT_LENGTH,
-        description=f"Environment name (max {Config.MAX_ENVIRONMENT_LENGTH} chars)",
-    )
-    key: str = Field(
-        ...,
-        min_length=1,
-        max_length=Config.MAX_APP_KEY_LENGTH,
-        description=f"Application key (max {Config.MAX_APP_KEY_LENGTH} chars)",
-    )
-    properties: Dict[str, str] = Field(..., description="Key-value pairs of properties")
+    environment: constr(min_length=1, max_length=Config.MAX_ENVIRONMENT_LENGTH)
+    key: constr(min_length=1, max_length=Config.MAX_APP_KEY_LENGTH)
+    properties: dict
 
-    @validator("environment", "key")
+    @validator("environment", "key", allow_reuse=True, check_fields=False)
     @classmethod
     def validate_alphanumeric(cls, v):
         """Validate environment and key contain only safe characters"""
@@ -39,7 +29,7 @@ class PropertyItem(BaseModel):
 
         return v.strip()
 
-    @validator("properties")
+    @validator("properties", allow_reuse=True, check_fields=False)
     @classmethod
     def validate_properties(cls, v):
         """Validate properties dictionary with Azure Key Vault limits"""
@@ -76,10 +66,10 @@ class PropertyItem(BaseModel):
 class PropertiesRequest(BaseModel):
     """Model for POST/PUT request body"""
 
-    properties: List[PropertyItem] = Field(
-        ...,
-        min_length=1,
-        max_length=Config.MAX_ITEMS_PER_BATCH,
+    properties: conlist(
+        PropertyItem,
+        min_items=1,
+        max_items=Config.MAX_ITEMS_PER_BATCH,
         description=f"List of property items (max {Config.MAX_ITEMS_PER_BATCH})",
     )
 

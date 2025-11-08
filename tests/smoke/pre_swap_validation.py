@@ -5,6 +5,7 @@ Validates staging slot before swapping to production
 """
 import os
 import sys
+import json
 import requests
 from typing import List, Tuple
 
@@ -27,7 +28,7 @@ def validate_endpoint_get() -> Tuple[bool, str]:
         )
 
         if response.status_code == 200:
-            body = response.json()
+            body = json.loads(response.json())
             if "responses" in body:
                 return True, "✅ GET endpoint validated"
             return False, "❌ GET response missing 'responses' key"
@@ -109,7 +110,7 @@ def validate_error_handling() -> Tuple[bool, str]:
         )
 
         if response.status_code == 400:
-            body = response.json()
+            body = json.loads(response.json())
             if "error" in body or "message" in body:
                 return True, "✅ Error handling validated"
 
