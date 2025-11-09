@@ -314,8 +314,9 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         responses = []
 
         for item in request_data.properties:
+
             # Set properties in Key Vault
-            kv_service.set_properties(item.dict()["environment"], item.key, item.properties)
+            kv_service.set_properties(item.environment, item.key, item.properties)
 
             # Build status response
             message = (
@@ -325,7 +326,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
             )
             responses.append(
                 PropertySetResponse(
-                    environment=item.dict()["environment"], key=item.key, code=200, message=message
+                    environment=item.environment, key=item.key, code=200, message=message
                 )
             )
 
@@ -608,7 +609,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
                 )
 
             # Set secure properties in Key Vault
-            kv_service.set_properties(item.dict()["environment"], item.key, item.properties)
+            kv_service.set_properties(item.environment, item.key, item.properties)
 
             # Build status response
             message = (
@@ -618,7 +619,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
             )
             responses.append(
                 PropertySetResponse(
-                    environment=item.dict()["environment"], key=item.key, code=200, message=message
+                    environment=item.environment, key=item.key, code=200, message=message
                 )
             )
 

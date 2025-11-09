@@ -68,12 +68,17 @@ sapi-azure-key-vault/
 ### 1. Clone and Install Dependencies
 
 ```bash
+# Install Python 3.11
+python --version
+brew install python@3.11
+
 # Create virtual environment
-python -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 ### 2. Configure Local Settings
