@@ -151,7 +151,9 @@ class TestPropertyItem:
 
     def test_strip_whitespace(self):
         """Test that whitespace is stripped from environment and key"""
-        item = PropertyItem(environment="  qa  ", keys="  test-app  ", properties={"key1": "value1"})
+        item = PropertyItem(
+            environment="  qa  ", keys="  test-app  ", properties={"key1": "value1"}
+        )
         assert item.environment == "qa"
         assert item.keys_ == "test-app"
 
@@ -171,4 +173,3 @@ class TestPropertyItem:
         assert data["environment"] == "qa"
         assert data["keys"] == "test-app"
         assert data["properties"] == {"key1": "value1"}
-
