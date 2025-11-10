@@ -463,7 +463,7 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
             environment=env,
             key=app_key,
             status_code=200,
-            message=f"Successfully deleted properties for {env}/{app_key}"
+            message=f"Successfully deleted properties for {env}/{app_key}",
         )
 
         logger.info(
