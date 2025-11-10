@@ -10,7 +10,6 @@ import secrets
 import uuid
 import azure.functions as func
 from typing import Tuple
-from pydantic import ValidationError
 
 from app.keyvault_service import KeyVaultService
 from app.rate_limiter import RateLimiter
