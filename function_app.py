@@ -254,7 +254,7 @@ def get_properties(req: func.HttpRequest) -> func.HttpResponse:
 
         # Build response
         response = PropertiesResponse(
-            responses=[PropertyResponse(env=env, key=app_key, properties=properties)]
+            responses=[PropertyResponse(environment=env, key=app_key, properties=properties)]
         )
 
         logger.info(f"[{correlation_id}] GET /v1/properties - Success for {env}/{app_key}")
@@ -316,7 +316,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
         for item in request_data.properties:
 
             # Set properties in Key Vault
-            kv_service.set_properties(item.environment, item.key, item.properties)
+            kv_service.set_properties(item.environment, item.keys_, item.properties_)
 
             # Build status response
             message = (
@@ -326,7 +326,7 @@ def _process_properties_request(req: func.HttpRequest, method: str) -> func.Http
             )
             responses.append(
                 PropertySetResponse(
-                    environment=item.environment, key=item.key, code=200, message=message
+                    environment=item.environment, key=item.keys_, code=200, message=message
                 )
             )
 
@@ -460,10 +460,10 @@ def delete_properties(req: func.HttpRequest) -> func.HttpResponse:
 
         # Build response using Pydantic model
         response = DeleteResponse(
-            message=f"Successfully deleted properties for {env}/{app_key}",
-            env=env,
+            environment=env,
             key=app_key,
-            deleted_count=deleted_count,
+            status_code=200,
+            message=f"Successfully deleted properties for {env}/{app_key}"
         )
 
         logger.info(
@@ -525,7 +525,7 @@ def get_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
 
         # Build response
         response = PropertiesResponse(
-            responses=[PropertyResponse(env=env, key=secure_key, properties=properties)]
+            responses=[PropertyResponse(environment=env, key=secure_key, properties=properties)]
         )
 
         logger.info(
@@ -589,7 +589,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
 
         for item in request_data.properties:
             # Validate no empty properties (prevents wasting storage and confusion)
-            if not item.properties or len(item.properties) == 0:
+            if not item.properties_ or len(item.properties_) == 0:
                 return create_error_response(
                     "ValidationError",
                     "Secure properties cannot be empty",
@@ -599,7 +599,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
 
             # Validate no reserved key names (prevents confusion and circular references)
             # Secure properties should contain actual secrets, not references to other secure properties
-            if "secure.properties" in item.properties:
+            if "secure.properties" in item.properties_:
                 return create_error_response(
                     "ValidationError",
                     "Secure properties cannot contain 'secure.properties' key. "
@@ -609,7 +609,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
                 )
 
             # Set secure properties in Key Vault
-            kv_service.set_properties(item.environment, item.key, item.properties)
+            kv_service.set_properties(item.environment, item.keys_, item.properties_)
 
             # Build status response
             message = (
@@ -619,7 +619,7 @@ def _process_secure_properties_request(req: func.HttpRequest, method: str) -> fu
             )
             responses.append(
                 PropertySetResponse(
-                    environment=item.environment, key=item.key, code=200, message=message
+                    environment=item.environment, key=item.keys_, code=200, message=message
                 )
             )
 
@@ -763,10 +763,10 @@ def delete_secure_properties(req: func.HttpRequest) -> func.HttpResponse:
 
         # Build response using Pydantic model
         response = DeleteResponse(
-            message=f"Successfully deleted secure properties for {env}/{secure_key}",
-            env=env,
+            environment=env,
             key=secure_key,
-            deleted_count=deleted_count,
+            status_code=200,
+            message=f"Successfully deleted secure properties for {env}/{secure_key}",
         )
 
         logger.info(

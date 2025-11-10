@@ -180,7 +180,7 @@ class TestGetPropertiesEndpoint:
         assert response.status_code == 200
         body = json.loads(response.get_body())
         assert "responses" in body
-        assert body["responses"][0]["env"] == "qa"
+        assert body["responses"][0]["environment"] == "qa"
         assert body["responses"][0]["key"] == "test-app"
 
     @patch("function_app.kv_service")
@@ -251,7 +251,7 @@ class TestPostPropertiesEndpoint:
         }
         req.get_json.return_value = {
             "properties": [
-                {"environment": "qa", "key": "test-app", "properties": {"new-key": "new-value"}}
+                {"environment": "qa", "keys": "test-app", "properties": {"new-key": "new-value"}}
             ]
         }
 
@@ -327,7 +327,7 @@ class TestPutPropertiesEndpoint:
             "properties": [
                 {
                     "environment": "qa",
-                    "key": "test-app",
+                    "keys": "test-app",
                     "properties": {"updated-key": "updated-value"},
                 }
             ]
@@ -402,7 +402,7 @@ class TestSecurePropertiesEndpoints:
         assert response.status_code == 200
         body = json.loads(response.get_body())
         assert "responses" in body
-        assert body["responses"][0]["env"] == "qa"
+        assert body["responses"][0]["environment"] == "qa"
         assert body["responses"][0]["key"] == "crm-secrets"
         assert "crm.client.id" in body["responses"][0]["properties"]
 
@@ -423,7 +423,7 @@ class TestSecurePropertiesEndpoints:
             "properties": [
                 {
                     "environment": "qa",
-                    "key": "crm-secrets",
+                    "keys": "crm-secrets",
                     "properties": {"crm.client.id": "test-id", "crm.client.secret": "test-secret"},
                 }
             ]
@@ -459,7 +459,7 @@ class TestSecurePropertiesEndpoints:
             "properties": [
                 {
                     "environment": "qa",
-                    "key": "crm-secrets",
+                    "keys": "crm-secrets",
                     "properties": {
                         "crm.client.id": "updated-id",
                         "crm.client.secret": "updated-secret",
@@ -503,9 +503,9 @@ class TestSecurePropertiesEndpoints:
         assert response.status_code == 200
         body = json.loads(response.get_body())
         assert "Successfully deleted secure properties" in body["message"]
-        assert body["env"] == "qa"
+        assert body["environment"] == "qa"
         assert body["key"] == "crm-secrets"
-        assert body["deleted_count"] == 2
+        assert body["status_code"] == 200
 
     @patch("function_app.kv_service")
     def test_post_secure_properties_with_reserved_key_rejected(self, mock_service, mock_env_vars):
@@ -521,7 +521,7 @@ class TestSecurePropertiesEndpoints:
             "properties": [
                 {
                     "environment": "qa",
-                    "key": "crm-secrets",
+                    "keys": "crm-secrets",
                     "properties": {
                         "crm.client.id": "test-id",
                         "secure.properties": "other-secrets",  # Reserved key!
@@ -555,7 +555,7 @@ class TestSecurePropertiesEndpoints:
             "properties": [
                 {
                     "environment": "prod",
-                    "key": "app-secrets",
+                    "keys": "app-secrets",
                     "properties": {
                         "api.key": "test-key",
                         "secure.properties": "crm-secrets",  # Reserved key!
