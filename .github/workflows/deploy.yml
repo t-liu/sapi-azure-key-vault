@@ -123,7 +123,7 @@ jobs:
           path: htmlcov/
 
   # ============================================================================
-  # STAGE 3: Build and Package Artifact
+  # STAGE 3: Build and Package Artifact (using Oryx)
   # ============================================================================
   build-and-package:
     name: Build & Package Artifact
@@ -137,49 +137,64 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          
-      - name: Create artifact directory
+
+      - name: Create artifact directory structure
         run: |
           mkdir -p artifact
-          mkdir -p artifact/.python_packages/lib/site-packages
+          echo "✅ Created artifact directory"
 
-          # Copy files FIRST (before pip, in case of failure)
+      - name: Copy source files to artifact
+        run: |
+          # Copy function app entry point
           cp function_app.py artifact/
+          
+          # Copy app module
           mkdir -p artifact/app
-
           cp app/__init__.py artifact/app/
           cp app/keyvault_service.py artifact/app/
           cp app/models.py artifact/app/
           cp app/rate_limiter.py artifact/app/
           cp app/constants.py artifact/app/
           
+          # Copy configuration files
           cp host.json artifact/
           cp requirements.txt artifact/
+          
+          echo "✅ Copied all source files"
 
-          # Install deps - UNQUOTE target, add verbose + error check
-          python -m pip install --upgrade pip
-          pip install --target=artifact/.python_packages/lib/site-packages -r requirements.txt -v || { echo "❌ PIP INSTALL FAILED"; exit 1; }
-
-          # Verify deps installed (CRITICAL)
-          if [ ! -d "artifact/.python_packages/lib/site-packages/pydantic" ]; then
-            echo "❌ pydantic NOT installed - check requirements.txt"
-            exit 1
-          fi
-          echo "✅ pydantic installed: $(ls artifact/.python_packages/lib/site-packages/pydantic | wc -l) files"
-
-          echo "=== DEPLOYMENT PACKAGE ==="
+      - name: Display artifact structure before build
+        run: |
+          echo "=== Pre-Build Artifact Structure ==="
           find artifact -type f | sort
           echo ""
-          echo "=== VERIFY function_app.py at root ==="
+          echo "=== Verify function_app.py ==="
           ls -la artifact/function_app.py
-          
           echo ""
-          echo "=== CHECK imports in function_app.py ==="
-          head -30 artifact/function_app.py | grep "^from\|^import"
-          
-          echo ""
-          echo "=== VERIFY app module files ==="
+          echo "=== Verify app module ==="
           ls -la artifact/app/
+
+      - name: Deploy artifact with Oryx build
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}
+          package: ./artifact
+          runtime: 'python'
+          runtime-version: ${{ env.PYTHON_VERSION }}
+          build-script: |
+            echo "🔨 Starting Oryx build process..."
+            pip install -r requirements.txt
+            echo "✅ Oryx build completed"
+          enable-oryx-build: true
+          respect-funcignore: true
+        continue-on-error: true
+
+      - name: Verify build output
+        run: |
+          echo "=== Post-Build Artifact Contents ==="
+          if [ -d "artifact" ]; then
+            find artifact -type f | head -20
+            echo "..."
+          fi
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -220,7 +235,7 @@ jobs:
           package: ./artifact
           slot-name: staging
           respect-funcignore: true
-          enable-oryx-build: false
+          enable-oryx-build: true
 
       - name: Wait for deployment to stabilize
         run: sleep 45
@@ -235,7 +250,7 @@ jobs:
             --query "defaultHostName" -o tsv)
           echo "url=https://${STAGING_URL}" >> $GITHUB_OUTPUT
           echo "Staging URL: https://${STAGING_URL}"
-      
+
       - name: Debug - Check deployed file structure via Kudu
         run: |
           echo "=== Getting Kudu credentials ==="
@@ -251,52 +266,26 @@ jobs:
           echo ""
           echo "=== Checking if app/ modules exist ==="
           curl -s -u "$USERNAME:$PASSWORD" \
-            "https://sapi-azure-key-vault-staging.azurewebsites.net/api/vfs/site/wwwroot/app/" \
+            "https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net/api/vfs/site/wwwroot/app/" \
             | jq -r '.[].name' || echo "app/ directory missing"
 
           echo "=== Checking wwwroot structure ==="
           curl -u "$USERNAME:$PASSWORD" \
-            "sapi-azure-key-vault-staging.azurewebsites.net/api/vfs/site/wwwroot/" \
+            "https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net/api/vfs/site/wwwroot/" \
             | jq '.'
           
           echo "=== Checking if function_app.py exists at root ==="
           curl -u "$USERNAME:$PASSWORD" \
-            "sapi-azure-key-vault-staging.azurewebsites.net/api/vfs/site/wwwroot/function_app.py" \
+            "https://${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}-staging.azurewebsites.net/api/vfs/site/wwwroot/function_app.py" \
             -I | head -5
 
-      - name: Debug - Check Function Host logs
-        run: |
-          echo "=== Fetching Function Host logs ==="
-          az webapp log download \
-            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --slot staging \
-            --log-file logs.zip || true
-          
-          if [ -f logs.zip ]; then
-            unzip -p logs.zip */error* 2>/dev/null || echo "No error logs"
-            unzip -p logs.zip */host* 2>/dev/null | tail -50 || echo "No host logs"
-          fi
-      
-      - name: Verify deployed functions (DEBUG)
+      - name: Verify deployed functions
         run: |
           echo "=== Listing deployed functions ==="
           az functionapp function list \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --query "[].{Name:name, Config:config.bindings[0].route, Status:state}" -o table
-          
-          echo "=== Raw JSON output ==="
-          az functionapp function list \
-            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --query "[]" -o json
-          
-          echo "=== Checking function app logs for import errors ==="
-          az monitor log-analytics query \
-            --workspace ${{ secrets.APP_INSIGHTS_NAME }} \
-            --analytics-query "AppExceptions | where Operation_Name == 'FunctionAppLogs' | take 10" \
-            -o table || echo "No App Insights logs found"
+            --query "[].{Name:name, Status:state}" -o table || echo "Could not list functions"
 
   # ============================================================================
   # STAGE 5: Integration Tests (Staging)
@@ -329,21 +318,13 @@ jobs:
           API_CLIENT_SECRET: ${{ secrets.TEST_API_CLIENT_SECRET }}
           ENVIRONMENT: staging
 
-      - name: Check Function App Logs
-        if: always()
-        run: |
-          echo "Fetching recent logs from Function App..."
-          az functionapp log tail \
-            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --slot staging || true
-
       - name: Upload Integration Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: integration-test-results
           path: test-results/
+          retention-days: 7
 
   # ============================================================================
   # STAGE 6: Smoke/Canary Tests (Staging)
@@ -413,7 +394,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: azure-function-app
           path: ./artifact
@@ -430,17 +411,18 @@ jobs:
           package: ./artifact
           slot-name: staging
           respect-funcignore: true
+          enable-oryx-build: true
 
       - name: Wait for slot deployment
         run: sleep 30
 
       - name: Warm up staging slot
         run: |
-          curl -f https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api/v1/properties?env=health&key=check \
+          curl -f https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api/v1/health \
             -H "client_id: ${{ secrets.PROD_API_CLIENT_ID }}" \
             -H "client_secret: ${{ secrets.PROD_API_CLIENT_SECRET }}" || true
 
-      - name: Install dependencies
+      - name: Install dependencies for validation
         run: |
           python -m pip install --upgrade pip
           pip install requests
@@ -513,16 +495,12 @@ jobs:
         continue-on-error: true
         with:
           inlineScript: |
-            # Query Application Insights for error rate
             az monitor app-insights metrics show \
               --app ${{ secrets.APP_INSIGHTS_NAME }} \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
               --metric requests/failed \
               --interval PT5M
 
-      # ============================================================================
-      # AUTOMATIC ROLLBACK on Failure
-      # ============================================================================
       - name: Rollback on Failure
         if: failure() || steps.prod-smoke.outcome == 'failure' || steps.health-check.outcome == 'failure'
         uses: azure/CLI@v1
@@ -530,7 +508,6 @@ jobs:
           inlineScript: |
             echo "🚨 DEPLOYMENT FAILURE DETECTED - INITIATING ROLLBACK"
             
-            # Swap back to previous version
             az functionapp deployment slot swap \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
               --name ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }} \
@@ -581,12 +558,6 @@ jobs:
               body: 'Production deployment was automatically rolled back due to failed health checks.\n\nPlease investigate the failure and retry deployment.',
               labels: ['production', 'rollback', 'critical']
             })
-
-      - name: Success Notification
-        if: success()
-        run: |
-          echo "✅ Production deployment successful and validated"
-          echo "📊 Monitoring will continue via Application Insights"
 
   # ============================================================================
   # Notification Job

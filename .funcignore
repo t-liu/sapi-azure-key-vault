@@ -1,14 +1,27 @@
 # Ignore these files as part of an Azure Function deployment
 .git*
-.vscode
-__pycache__
 *.py[cod]
 *$py.class
 .pytest_cache
-.env
 requirements-dev.txt
 
 tests
 docs
 examples
 README.md
+test-results/
+htmlcov/
+.coverage
+
+# Local dev
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
