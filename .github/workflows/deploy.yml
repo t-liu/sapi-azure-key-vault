@@ -218,7 +218,7 @@ jobs:
           package: ./artifact
           slot-name: staging
           respect-funcignore: true
-          enable-oryx-build: true
+          enable-oryx-build: false
 
       - name: Wait for deployment to stabilize
         run: sleep 45
