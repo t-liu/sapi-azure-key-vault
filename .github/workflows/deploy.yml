@@ -141,29 +141,31 @@ jobs:
       - name: Create artifact directory
         run: |
           mkdir -p artifact
-          
-          # Create the target directory structure
           mkdir -p artifact/.python_packages/lib/site-packages
-          
-          # Copy function_app.py to root
+
+          # Copy files FIRST (before pip, in case of failure)
           cp function_app.py artifact/
-          # cp test_function_app.py artifact/function_app.py
-          
-          # Copy app module
           mkdir -p artifact/app
+
           cp app/__init__.py artifact/app/
           cp app/keyvault_service.py artifact/app/
           cp app/models.py artifact/app/
           cp app/rate_limiter.py artifact/app/
           cp app/constants.py artifact/app/
           
-          # Copy config
           cp host.json artifact/
           cp requirements.txt artifact/
-          
-          # Install deps into artifact
+
+          # Install deps - UNQUOTE target, add verbose + error check
           python -m pip install --upgrade pip
-          pip install --target="artifact/.python_packages/lib/site-packages" -r requirements.txt
+          pip install --target=artifact/.python_packages/lib/site-packages -r requirements.txt -v || { echo "❌ PIP INSTALL FAILED"; exit 1; }
+
+          # Verify deps installed (CRITICAL)
+          if [ ! -d "artifact/.python_packages/lib/site-packages/pydantic" ]; then
+            echo "❌ pydantic NOT installed - check requirements.txt"
+            exit 1
+          fi
+          echo "✅ pydantic installed: $(ls artifact/.python_packages/lib/site-packages/pydantic | wc -l) files"
 
           echo "=== DEPLOYMENT PACKAGE ==="
           find artifact -type f | sort
