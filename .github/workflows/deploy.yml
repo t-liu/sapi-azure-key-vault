@@ -211,23 +211,25 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_STAGING }}
 
-      - name: Deploy to Azure Function
+      - name: Deploy to Azure Function (Staging Slot)
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}
           package: ./artifact
+          slot-name: staging
           respect-funcignore: true
           enable-oryx-build: false
 
       - name: Wait for deployment to stabilize
         run: sleep 45
 
-      - name: Get URL
+      - name: Get Staging Slot URL
         id: get-url
         run: |
           STAGING_URL=$(az functionapp show \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
             --query "defaultHostName" -o tsv)
           echo "url=https://${STAGING_URL}" >> $GITHUB_OUTPUT
           echo "Staging URL: https://${STAGING_URL}"
@@ -238,6 +240,7 @@ jobs:
           CREDS=$(az webapp deployment list-publishing-credentials \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
             --query "{username:publishingUserName, password:publishingPassword}" -o json)
           
           USERNAME=$(echo $CREDS | jq -r .username)
@@ -265,6 +268,7 @@ jobs:
           az webapp log download \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
             --log-file logs.zip || true
           
           if [ -f logs.zip ]; then
@@ -330,6 +334,7 @@ jobs:
           az functionapp log tail \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging || true
 
       - name: Upload Integration Test Results
         uses: actions/upload-artifact@v4
@@ -394,6 +399,72 @@ jobs:
           echo "📊 Review staging metrics before approving"
 
   # ============================================================================
+  # STAGE 8: Deploy to Production (with Slot Swap)
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: approval-gate
+    environment:
+      name: production
+      url: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: azure-function-app
+          path: ./artifact
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
+      - name: Deploy to Production Staging Slot
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}
+          package: ./artifact
+          slot-name: staging
+          respect-funcignore: true
+
+      - name: Wait for slot deployment
+        run: sleep 30
+
+      - name: Warm up staging slot
+        run: |
+          curl -f https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api/v1/properties?env=health&key=check \
+            -H "client_id: ${{ secrets.PROD_API_CLIENT_ID }}" \
+            -H "client_secret: ${{ secrets.PROD_API_CLIENT_SECRET }}" || true
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run Pre-Swap Validation
+        run: |
+          python tests/smoke/pre_swap_validation.py
+        env:
+          API_BASE_URL: https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}-staging.azurewebsites.net/api
+          API_CLIENT_ID: ${{ secrets.PROD_API_CLIENT_ID }}
+          API_CLIENT_SECRET: ${{ secrets.PROD_API_CLIENT_SECRET }}
+
+      - name: Swap Slots (Blue-Green Deployment)
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az functionapp deployment slot swap \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }} \
+              --slot staging \
+              --target-slot production
+
+      - name: Wait for swap to complete
+        run: sleep 30
+
+  # ============================================================================
   # STAGE 9: Post-Deploy Monitoring & Validation
   # ============================================================================
   post-deploy-validation:
@@ -446,6 +517,25 @@ jobs:
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
               --metric requests/failed \
               --interval PT5M
+
+      # ============================================================================
+      # AUTOMATIC ROLLBACK on Failure
+      # ============================================================================
+      - name: Rollback on Failure
+        if: failure() || steps.prod-smoke.outcome == 'failure' || steps.health-check.outcome == 'failure'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "🚨 DEPLOYMENT FAILURE DETECTED - INITIATING ROLLBACK"
+            
+            # Swap back to previous version
+            az functionapp deployment slot swap \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }} \
+              --slot staging \
+              --target-slot production
+            
+            echo "✅ Rollback completed - Previous version restored"
 
       - name: Send Rollback Notification
         if: failure()
