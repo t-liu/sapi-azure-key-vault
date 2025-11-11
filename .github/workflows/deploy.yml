@@ -200,6 +200,38 @@ jobs:
           name: azure-function-app
           path: ./artifact
 
+      - name: Verify artifact before deployment
+        run: |
+          echo "=== Artifact contents before deployment ==="
+          find ./artifact -type f | sort
+          echo ""
+          echo "=== Check function_app.py ==="
+          if [ -f "./artifact/function_app.py" ]; then
+            echo "✅ function_app.py exists"
+            head -5 ./artifact/function_app.py
+          else
+            echo "❌ function_app.py NOT FOUND"
+            exit 1
+          fi
+          echo ""
+          echo "=== Check requirements.txt ==="
+          if [ -f "./artifact/requirements.txt" ]; then
+            echo "✅ requirements.txt exists"
+            cat ./artifact/requirements.txt
+          else
+            echo "❌ requirements.txt NOT FOUND"
+            exit 1
+          fi
+          echo ""
+          echo "=== Check app module ==="
+          if [ -d "./artifact/app" ]; then
+            echo "✅ app/ directory exists"
+            find ./artifact/app -type f
+          else
+            echo "❌ app/ directory NOT FOUND"
+            exit 1
+          fi
+
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -213,9 +245,26 @@ jobs:
           slot-name: staging
           respect-funcignore: true
           enable-oryx-build: true
+          scm-do-build-during-deployment: true
 
       - name: Wait for deployment to stabilize
-        run: sleep 45
+        run: sleep 60
+
+      - name: Check Azure Function deployment logs
+        run: |
+          echo "=== Checking recent deployment logs ==="
+          az functionapp deployment slot list \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            -o table || echo "Could not list deployments"
+          
+          echo ""
+          echo "=== Checking function app logs via streaming ==="
+          timeout 30 az functionapp log tail \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
+            --provider Microsoft.Web/sites/slots || echo "Logs timed out or unavailable"
 
       - name: Get Staging Slot URL
         id: get-url
