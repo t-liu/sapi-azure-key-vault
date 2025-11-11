@@ -173,29 +173,6 @@ jobs:
           echo "=== Verify app module ==="
           ls -la artifact/app/
 
-      - name: Deploy artifact with Oryx build
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}
-          package: ./artifact
-          runtime: 'python'
-          runtime-version: ${{ env.PYTHON_VERSION }}
-          build-script: |
-            echo "🔨 Starting Oryx build process..."
-            pip install -r requirements.txt
-            echo "✅ Oryx build completed"
-          enable-oryx-build: true
-          respect-funcignore: true
-        continue-on-error: true
-
-      - name: Verify build output
-        run: |
-          echo "=== Post-Build Artifact Contents ==="
-          if [ -d "artifact" ]; then
-            find artifact -type f | head -20
-            echo "..."
-          fi
-
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
