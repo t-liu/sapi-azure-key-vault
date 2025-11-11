@@ -143,8 +143,8 @@ jobs:
           mkdir -p artifact
           
           # Copy function_app.py to root
-          # cp function_app.py artifact/
-          cp test_function_app.py artifact/function_app.py
+          cp function_app.py artifact/
+          # cp test_function_app.py artifact/function_app.py
           
           # Copy app module
           mkdir -p artifact/app
@@ -158,9 +158,12 @@ jobs:
           cp host.json artifact/
           cp requirements.txt artifact/
           
-          echo "=== ARTIFACT STRUCTURE ==="
+          # Install deps into artifact
+          python -m pip install --upgrade pip
+          pip install --target="artifact/.python_packages/lib/site-packages" -r requirements.txt
+
+          echo "=== DEPLOYMENT PACKAGE ==="
           find artifact -type f | sort
-          
           echo ""
           echo "=== VERIFY function_app.py at root ==="
           ls -la artifact/function_app.py
