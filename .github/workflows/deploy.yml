@@ -142,6 +142,9 @@ jobs:
         run: |
           mkdir -p artifact
           
+          # Create the target directory structure
+          mkdir -p artifact/.python_packages/lib/site-packages
+          
           # Copy function_app.py to root
           cp function_app.py artifact/
           # cp test_function_app.py artifact/function_app.py
