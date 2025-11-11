@@ -252,19 +252,36 @@ jobs:
 
       - name: Check Azure Function deployment logs
         run: |
-          echo "=== Checking recent deployment logs ==="
-          az functionapp deployment slot list \
-            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            -o table || echo "Could not list deployments"
-          
-          echo ""
-          echo "=== Checking function app logs via streaming ==="
-          timeout 30 az functionapp log tail \
+          echo "=== Checking deployment history ==="
+          az functionapp deployment list \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --slot staging \
-            --provider Microsoft.Web/sites/slots || echo "Logs timed out or unavailable"
+            -o table || echo "Could not list deployments"
+          
+          echo ""
+          echo "=== Fetching deployment logs ==="
+          az functionapp deployment logs list \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
+            -o table || echo "Could not fetch deployment logs"
+          
+          echo ""
+          echo "=== Downloading full logs ==="
+          az webapp log download \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot staging \
+            --log-file deployment-logs.zip 2>&1 || echo "No logs available"
+          
+          if [ -f deployment-logs.zip ]; then
+            echo "Log file downloaded, extracting..."
+            unzip -l deployment-logs.zip | head -20
+            echo ""
+            echo "=== Searching for build errors ==="
+            unzip -p deployment-logs.zip 2>/dev/null | grep -i "error\|failed\|oryx" | head -20 || echo "No error logs found"
+          fi
 
       - name: Get Staging Slot URL
         id: get-url
@@ -584,74 +601,3 @@ jobs:
               body: 'Production deployment was automatically rolled back due to failed health checks.\n\nPlease investigate the failure and retry deployment.',
               labels: ['production', 'rollback', 'critical']
             })
-
-  # ============================================================================
-  # Notification Job
-  # ============================================================================
-  notify:
-    name: Send Notifications
-    runs-on: ubuntu-latest
-    needs: [post-deploy-validation]
-    if: always()
-    steps:
-      - name: Send Success Notification
-        if: needs.post-deploy-validation.result == 'success'
-        run: |
-          curl -H "Content-Type: application/json" \
-            -d '{
-              "@type": "MessageCard",
-              "@context": "https://schema.org/extensions",
-              "summary": "✅ Production Deployment Successful",
-              "themeColor": "00FF00",
-              "title": "✅ Production Deployment Complete",
-              "sections": [{
-                "activityTitle": "Deployment Successful",
-                "activitySubtitle": "All health checks passed",
-                "facts": [
-                  { "name": "Environment:", "value": "Production" },
-                  { "name": "Function App:", "value": "${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}" },
-                  { "name": "Repository:", "value": "${{ github.repository }}" },
-                  { "name": "Commit:", "value": "${{ github.sha }}" },
-                  { "name": "Author:", "value": "${{ github.actor }}" },
-                  { "name": "Branch:", "value": "${{ github.ref_name }}" }
-                ],
-                "text": "Production deployment completed successfully. All smoke tests and health checks passed."
-              }],
-              "potentialAction": [{
-                "@type": "OpenUri",
-                "name": "View Deployment",
-                "targets": [{ "os": "default", "uri": "https://${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}.azurewebsites.net" }]
-              }]
-            }' \
-            ${{ secrets.TEAMS_WEBHOOK_URL }}
-
-      - name: Send Failure Notification
-        if: needs.post-deploy-validation.result == 'failure'
-        run: |
-          curl -H "Content-Type: application/json" \
-            -d '{
-              "@type": "MessageCard",
-              "@context": "https://schema.org/extensions",
-              "summary": "❌ Production Deployment Failed",
-              "themeColor": "FF0000",
-              "title": "❌ Production Deployment Failed",
-              "sections": [{
-                "activityTitle": "Deployment Failed",
-                "activitySubtitle": "Automatic rollback completed",
-                "facts": [
-                  { "name": "Environment:", "value": "Production" },
-                  { "name": "Repository:", "value": "${{ github.repository }}" },
-                  { "name": "Commit:", "value": "${{ github.sha }}" },
-                  { "name": "Author:", "value": "${{ github.actor }}" },
-                  { "name": "Branch:", "value": "${{ github.ref_name }}" },
-                  { "name": "Status:", "value": "Rolled back to previous version" }
-                ],
-                "text": "Production deployment failed validation and was automatically rolled back. Please review the logs and investigate the issue."
-              }],
-              "potentialAction": [{
-                "@type": "OpenUri",
-                "name": "View Workflow Run",
-                "targets": [{ "os": "default", "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" }]
-              }]
-            }' \
-            ${{ secrets.TEAMS_WEBHOOK_URL }}
