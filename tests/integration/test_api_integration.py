@@ -139,7 +139,11 @@ class TestAPIIntegration:
         # Create properties
         post_data = {
             "properties": [
-                {"environment": test_env, "keys": test_app_key, "properties": {"to.delete": "value"}}
+                {
+                    "environment": test_env,
+                    "keys": test_app_key,
+                    "properties": {"to.delete": "value"},
+                }
             ]
         }
 
