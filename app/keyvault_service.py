@@ -146,24 +146,22 @@ class KeyVaultService:
         # Cache miss or expired - fetch from Key Vault
         logger.info(LogMessages.CACHE_MISS.format(cache_key=cache_key))
         properties = {}
-        prefix = f"{env}--{app_key}--"
 
         try:
             # List all secrets with the matching prefix
             secret_properties = self.client.list_properties_of_secrets()
 
             for secret_property in secret_properties:
-                if secret_property.name.startswith(prefix):
-                    try:
-                        secret = self.client.get_secret(secret_property.name)
-                        # Extract the encoded property key from the secret name
-                        encoded_property_key = secret_property.name[len(prefix) :]
-                        # Decode base64url back to original property key
-                        original_key = self._decode_property_key(encoded_property_key)
-                        properties[original_key] = secret.value
-                    except ResourceNotFoundError:
-                        logger.warning(f"Secret {secret_property.name} not found")
-                        continue
+                try:
+                    secret = self.client.get_secret(secret_property.name)
+                    # Extract the encoded property key from the secret name
+                    encoded_property_key = secret_property.name
+                    # Decode base64url back to original property key
+                    original_key = self._decode_property_key(encoded_property_key)
+                    properties[original_key] = secret.value
+                except ResourceNotFoundError:
+                    logger.warning(f"Secret {secret_property.name} not found")
+                    continue
 
             # Update cache with thread safety
             with self._cache_lock:

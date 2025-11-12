@@ -343,6 +343,18 @@ jobs:
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --query "[].{Name:name, Status:state}" -o table || echo "Could not list functions"
 
+      - name: Enable Managed Identity
+        run: |
+          echo "🔐 Enabling Managed Identity on Function App..."
+          
+          PRINCIPAL_ID=$(az functionapp identity assign \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --slot staging \
+            --query principalId -o tsv)
+          
+          echo "✅ Managed Identity enabled with Principal ID: $PRINCIPAL_ID"
+
   # ============================================================================
   # STAGE 5: Integration Tests (Staging)
   # ============================================================================

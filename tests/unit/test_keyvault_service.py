@@ -130,11 +130,11 @@ class TestKeyVaultService:
         # Mock secret properties with base64url encoded property keys
         # "https.port" base64url encoded (without padding) is "aHR0cHMucG9ydA"
         secret_prop1 = Mock(spec=SecretProperties)
-        secret_prop1.name = "qa--test-app--aHR0cHMucG9ydA"
+        secret_prop1.name = "aHR0cHMucG9ydA"
 
         # "db.password" base64url encoded (without padding) is "ZGIucGFzc3dvcmQ"
         secret_prop2 = Mock(spec=SecretProperties)
-        secret_prop2.name = "qa--test-app--ZGIucGFzc3dvcmQ"
+        secret_prop2.name = "ZGIucGFzc3dvcmQ"
 
         mock_client.list_properties_of_secrets.return_value = [secret_prop1, secret_prop2]
 
@@ -245,7 +245,7 @@ class TestKeyVaultService:
 
         # Mock secret properties
         secret_prop = Mock(spec=SecretProperties)
-        secret_prop.name = "qa--test-app--key1"
+        secret_prop.name = "key1"
         mock_client.list_properties_of_secrets.return_value = [secret_prop]
 
         # Mock get_secret response
@@ -274,7 +274,7 @@ class TestKeyVaultService:
 
         # Mock for initial get
         secret_prop1 = Mock(spec=SecretProperties)
-        secret_prop1.name = "qa--test-app--key1"
+        secret_prop1.name = "key1"
         mock_client.list_properties_of_secrets.return_value = [secret_prop1]
 
         mock_secret1 = Mock()
@@ -289,7 +289,7 @@ class TestKeyVaultService:
 
         # Set properties - should invalidate cache
         secret_prop2 = Mock(spec=SecretProperties)
-        secret_prop2.name = "qa--test-app--key2"
+        secret_prop2.name = "key2"
         mock_client.list_properties_of_secrets.return_value = [secret_prop1, secret_prop2]
 
         mock_secret2 = Mock()
@@ -311,7 +311,7 @@ class TestKeyVaultService:
 
         # Mock for initial get
         secret_prop = Mock(spec=SecretProperties)
-        secret_prop.name = "qa--test-app--key1"
+        secret_prop.name = "key1"
         mock_client.list_properties_of_secrets.return_value = [secret_prop]
 
         mock_secret = Mock()
@@ -348,7 +348,7 @@ class TestKeyVaultService:
 
         # Mock secret properties
         secret_prop = Mock(spec=SecretProperties)
-        secret_prop.name = "qa--test-app--key1"
+        secret_prop.name = "key1"
         mock_client.list_properties_of_secrets.return_value = [secret_prop]
 
         mock_secret = Mock()
@@ -413,13 +413,13 @@ class TestKeyVaultService:
 
         # Setup mocks for app1
         secret_prop1 = Mock(spec=SecretProperties)
-        secret_prop1.name = "qa--app1--key1"
+        secret_prop1.name = "key1"
         mock_secret1 = Mock()
         mock_secret1.value = "value1"
 
         # Setup mocks for app2
         secret_prop2 = Mock(spec=SecretProperties)
-        secret_prop2.name = "qa--app2--key2"
+        secret_prop2.name = "key2"
         mock_secret2 = Mock()
         mock_secret2.value = "value2"
 
