@@ -237,18 +237,31 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_STAGING }}
 
-      - name: Deploy to Azure Function (Staging Slot)
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }}
-          package: ./artifact
-          slot-name: staging
-          respect-funcignore: true
-          enable-oryx-build: true
-          scm-do-build-during-deployment: true
+      - name: Create deployment package (ZIP)
+        run: |
+          echo "📦 Creating deployment package..."
+          cd artifact
+          zip -r ../artifact.zip . -x "*.pyc" "__pycache__/*"
+          cd ..
+          ls -lh artifact.zip
+          echo "✅ Package created"
+
+      - name: Deploy to Azure Function (Staging Slot) using Azure CLI with Oryx
+        run: |
+          echo "🚀 Starting deployment with Oryx build..."
+          
+          # Deploy using Azure CLI with build-remote for Oryx
+          az functionapp deployment source config-zip \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_STAGING }} \
+            --slot staging \
+            --src artifact.zip \
+            --build-remote true
+          
+          echo "✅ Deployment initiated"
 
       - name: Wait for deployment to stabilize
-        run: sleep 60
+        run: sleep 90
 
       - name: Check Azure Function deployment logs
         run: |
@@ -447,17 +460,30 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
-      - name: Deploy to Production Staging Slot
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}
-          package: ./artifact
-          slot-name: staging
-          respect-funcignore: true
-          enable-oryx-build: true
+      - name: Create deployment package (ZIP)
+        run: |
+          echo "📦 Creating deployment package..."
+          cd artifact
+          zip -r ../artifact.zip . -x "*.pyc" "__pycache__/*"
+          cd ..
+          ls -lh artifact.zip
+          echo "✅ Package created"
+
+      - name: Deploy to Production Staging Slot using Azure CLI with Oryx
+        run: |
+          echo "🚀 Starting production deployment with Oryx build..."
+          
+          az functionapp deployment source config-zip \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }} \
+            --slot staging \
+            --src artifact.zip \
+            --build-remote true
+          
+          echo "✅ Production deployment initiated"
 
       - name: Wait for slot deployment
-        run: sleep 30
+        run: sleep 90
 
       - name: Warm up staging slot
         run: |
