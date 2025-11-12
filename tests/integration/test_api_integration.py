@@ -48,7 +48,7 @@ class TestAPIIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": test_app_key,
+                    "keys": test_app_key,
                     "properties": {"test.property1": "value1", "test.property2": "value2"},
                 }
             ]
@@ -104,7 +104,7 @@ class TestAPIIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": test_app_key,
+                    "keys": test_app_key,
                     "properties": {"updated.key": "updated.value"},
                 }
             ]
@@ -139,7 +139,7 @@ class TestAPIIntegration:
         # Create properties
         post_data = {
             "properties": [
-                {"environment": test_env, "key": test_app_key, "properties": {"to.delete": "value"}}
+                {"environment": test_env, "keys": test_app_key, "properties": {"to.delete": "value"}}
             ]
         }
 
@@ -232,7 +232,7 @@ class TestSecurePropertiesIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": secure_key,
+                    "keys": secure_key,
                     "properties": {
                         "api.client.id": "test-client-123",
                         "api.client.secret": "test-secret-456",
@@ -351,7 +351,7 @@ class TestSecurePropertiesIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": "app1-integration-test",
+                    "keys": "app1-integration-test",
                     "properties": {
                         "app.name": "Application 1",
                         "secure.properties": secure_key,  # Reference to shared secrets
@@ -364,7 +364,7 @@ class TestSecurePropertiesIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": "app2-integration-test",
+                    "keys": "app2-integration-test",
                     "properties": {
                         "app.name": "Application 2",
                         "secure.properties": secure_key,  # Same reference
