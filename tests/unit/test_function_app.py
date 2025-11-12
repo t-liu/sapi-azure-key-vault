@@ -296,7 +296,7 @@ class TestPostPropertiesEndpoint:
             "properties": [
                 {
                     "environment": "",  # Invalid: empty environment
-                    "key": "test-app",
+                    "keys": "test-app",
                     "properties": {"key": "value"},
                 }
             ]
@@ -589,7 +589,7 @@ class TestSecurePropertiesEndpoints:
             "properties": [
                 {
                     "environment": "qa",
-                    "key": "empty-secrets",
+                    "keys": "empty-secrets",
                     "properties": {},  # Empty!
                 }
             ]
@@ -620,7 +620,7 @@ class TestSecurePropertiesEndpoints:
             "properties": [
                 {
                     "environment": "prod",
-                    "key": "empty-secrets",
+                    "keys": "empty-secrets",
                     "properties": {},  # Empty!
                 }
             ]
