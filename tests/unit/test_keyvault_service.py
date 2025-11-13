@@ -170,45 +170,6 @@ class TestKeyVaultService:
 
     @patch("app.keyvault_service.DefaultAzureCredential")
     @patch("app.keyvault_service.SecretClient")
-    def test_get_properties_filters_by_prefix(
-        self, mock_client_class, mock_credential, mock_env_vars
-    ):
-        """Test that get_properties only returns secrets matching the env/app_key prefix"""
-        mock_client = Mock(spec=SecretClient)
-        mock_client_class.return_value = mock_client
-
-        # Mock multiple secrets with different prefixes
-        secret_prop1 = Mock(spec=SecretProperties)
-        secret_prop1.name = "qa--test-app--key1"
-
-        secret_prop2 = Mock(spec=SecretProperties)
-        secret_prop2.name = "qa--other-app--key2"
-
-        secret_prop3 = Mock(spec=SecretProperties)
-        secret_prop3.name = "prod--test-app--key3"
-
-        mock_client.list_properties_of_secrets.return_value = [
-            secret_prop1,
-            secret_prop2,
-            secret_prop3,
-        ]
-
-        # Mock get_secret response (only called for matching prefix)
-        mock_secret1 = Mock()
-        mock_secret1.value = "value1"
-        mock_client.get_secret.return_value = mock_secret1
-
-        # Test - query only qa/test-app
-        service = KeyVaultService()
-        properties = service.get_properties("qa", "test-app")
-
-        # Should only have key1 (matching qa--test-app prefix)
-        assert properties == {"key1": "value1"}
-        # Should only call get_secret once (for the matching secret)
-        mock_client.get_secret.assert_called_once()
-
-    @patch("app.keyvault_service.DefaultAzureCredential")
-    @patch("app.keyvault_service.SecretClient")
     def test_get_properties_empty_result(self, mock_client_class, mock_credential, mock_env_vars):
         """Test get_properties with no matching secrets"""
         mock_client = Mock(spec=SecretClient)

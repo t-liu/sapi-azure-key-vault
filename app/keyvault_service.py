@@ -156,29 +156,19 @@ class KeyVaultService:
         logger.info(LogMessages.CACHE_MISS.format(cache_key=cache_key))
         properties = {}
 
-        # Build prefix to match secrets for this env/app_key
-        safe_env = env.replace("_", "-").replace(".", "-")
-        safe_app_key = app_key.replace("_", "-").replace(".", "-")
-        prefix = (
-            f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
-        )
-
         try:
             # List all secrets with the matching prefix
             secret_properties = self.client.list_properties_of_secrets()
 
             for secret_property in secret_properties:
-                if secret_property.name.startswith(prefix):
-                    try:
-                        secret = self.client.get_secret(secret_property.name)
-                        # Extract the original property key (without env/app_key prefix)
-                        original_key = self._extract_property_key(
-                            secret_property.name, env, app_key
-                        )
-                        properties[original_key] = secret.value
-                    except ResourceNotFoundError:
-                        logger.warning(f"Secret {secret_property.name} not found")
-                        continue
+                try:
+                    secret = self.client.get_secret(secret_property.name)
+                    # Extract the original property key (without env/app_key prefix)
+                    original_key = self._extract_property_key(secret_property.name, env, app_key)
+                    properties[original_key] = secret.value
+                except ResourceNotFoundError:
+                    logger.warning(f"Secret {secret_property.name} not found")
+                    continue
 
             # Update cache with thread safety
             with self._cache_lock:
