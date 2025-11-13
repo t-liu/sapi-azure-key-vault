@@ -170,7 +170,9 @@ class TestKeyVaultService:
 
     @patch("app.keyvault_service.DefaultAzureCredential")
     @patch("app.keyvault_service.SecretClient")
-    def test_get_properties_filters_by_prefix(self, mock_client_class, mock_credential, mock_env_vars):
+    def test_get_properties_filters_by_prefix(
+        self, mock_client_class, mock_credential, mock_env_vars
+    ):
         """Test that get_properties only returns secrets matching the env/app_key prefix"""
         mock_client = Mock(spec=SecretClient)
         mock_client_class.return_value = mock_client
@@ -185,7 +187,11 @@ class TestKeyVaultService:
         secret_prop3 = Mock(spec=SecretProperties)
         secret_prop3.name = "prod--test-app--key3"
 
-        mock_client.list_properties_of_secrets.return_value = [secret_prop1, secret_prop2, secret_prop3]
+        mock_client.list_properties_of_secrets.return_value = [
+            secret_prop1,
+            secret_prop2,
+            secret_prop3,
+        ]
 
         # Mock get_secret response (only called for matching prefix)
         mock_secret1 = Mock()
@@ -224,7 +230,7 @@ class TestKeyVaultService:
         # Mock list_properties for the final get_properties call
         secret_prop1 = Mock(spec=SecretProperties)
         secret_prop1.name = "qa--test-app--api-key"
-        
+
         secret_prop2 = Mock(spec=SecretProperties)
         secret_prop2.name = "qa--test-app--timeout"
 
@@ -275,7 +281,9 @@ class TestKeyVaultService:
 
     @patch("app.keyvault_service.DefaultAzureCredential")
     @patch("app.keyvault_service.SecretClient")
-    def test_delete_properties_filters_by_prefix(self, mock_client_class, mock_credential, mock_env_vars):
+    def test_delete_properties_filters_by_prefix(
+        self, mock_client_class, mock_credential, mock_env_vars
+    ):
         """Test that delete_properties only deletes secrets matching the prefix"""
         mock_client = Mock(spec=SecretClient)
         mock_client_class.return_value = mock_client
@@ -283,7 +291,7 @@ class TestKeyVaultService:
         # Mock multiple secrets with different prefixes
         secret_prop1 = Mock(spec=SecretProperties)
         secret_prop1.name = "qa--test-app--key1"
-        
+
         secret_prop2 = Mock(spec=SecretProperties)
         secret_prop2.name = "qa--other-app--key2"
 
@@ -362,7 +370,7 @@ class TestKeyVaultService:
         # Mock for initial get
         secret_prop1 = Mock(spec=SecretProperties)
         secret_prop1.name = "qa--test-app--key1"
-        
+
         mock_secret1 = Mock()
         mock_secret1.value = "value1"
 
@@ -378,7 +386,7 @@ class TestKeyVaultService:
         # Set properties - should invalidate cache
         secret_prop2 = Mock(spec=SecretProperties)
         secret_prop2.name = "qa--test-app--key2"
-        
+
         mock_secret2 = Mock()
         mock_secret2.value = "value2"
 

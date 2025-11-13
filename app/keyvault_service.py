@@ -52,10 +52,10 @@ class KeyVaultService:
         """
         Generate a standardized secret name with environment and app key metadata.
         Format: {env}--{app_key}--{property_key}
-        
+
         Azure Key Vault only allows: alphanumeric, hyphens, and underscores
         Property keys with dots are stored with hyphens (dots → hyphens)
-        
+
         Examples:
             env="qa", app_key="myapp", property_key="database.host"
             → "qa--myapp--database-host"
@@ -93,7 +93,7 @@ class KeyVaultService:
         """
         Extract the original property key from a secret name.
         Reverse the transformation done in _generate_secret_name.
-        
+
         Examples:
             secret_name="qa--myapp--database-host", env="qa", app_key="myapp"
             → "database.host"
@@ -101,15 +101,17 @@ class KeyVaultService:
         # Build the prefix that was added
         safe_env = env.replace("_", "-").replace(".", "-")
         safe_app_key = app_key.replace("_", "-").replace(".", "-")
-        prefix = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
-        
+        prefix = (
+            f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
+        )
+
         # Remove prefix to get the safe property key
         if secret_name.startswith(prefix):
-            safe_property_key = secret_name[len(prefix):]
+            safe_property_key = secret_name[len(prefix) :]
             # Reverse: hyphens back to dots
             original_key = safe_property_key.replace("-", ".")
             return original_key
-        
+
         return secret_name
 
     @retry(
@@ -153,11 +155,13 @@ class KeyVaultService:
         # Cache miss or expired - fetch from Key Vault
         logger.info(LogMessages.CACHE_MISS.format(cache_key=cache_key))
         properties = {}
-        
+
         # Build prefix to match secrets for this env/app_key
         safe_env = env.replace("_", "-").replace(".", "-")
         safe_app_key = app_key.replace("_", "-").replace(".", "-")
-        prefix = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
+        prefix = (
+            f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
+        )
 
         try:
             # List all secrets with the matching prefix
@@ -168,7 +172,9 @@ class KeyVaultService:
                     try:
                         secret = self.client.get_secret(secret_property.name)
                         # Extract the original property key (without env/app_key prefix)
-                        original_key = self._extract_property_key(secret_property.name, env, app_key)
+                        original_key = self._extract_property_key(
+                            secret_property.name, env, app_key
+                        )
                         properties[original_key] = secret.value
                     except ResourceNotFoundError:
                         logger.warning(f"Secret {secret_property.name} not found")
@@ -257,8 +263,10 @@ class KeyVaultService:
         # Build prefix for matching secrets
         safe_env = env.replace("_", "-").replace(".", "-")
         safe_app_key = app_key.replace("_", "-").replace(".", "-")
-        prefix = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
-        
+        prefix = (
+            f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
+        )
+
         deleted_count = 0
 
         try:
