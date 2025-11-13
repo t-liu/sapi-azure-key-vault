@@ -6,7 +6,6 @@ Handles all interactions with Azure Key Vault
 import os
 import logging
 import threading
-import base64
 from typing import Dict
 from datetime import datetime, timedelta
 from azure.keyvault.secrets import SecretClient
@@ -51,12 +50,15 @@ class KeyVaultService:
 
     def _generate_secret_name(self, env: str, app_key: str, property_key: str) -> str:
         """
-        Generate a standardized secret name using base64url encoding for property keys
-        Format: {env}--{app_key}--{base64url_property_key}
-        Azure Key Vault only allows alphanumeric and hyphens
-
-        This ensures all property key characters are preserved (reversible encoding)
-        and prevents naming conflicts from character replacement.
+        Generate a standardized secret name with environment and app key metadata.
+        Format: {env}--{app_key}--{property_key}
+        
+        Azure Key Vault only allows: alphanumeric, hyphens, and underscores
+        Property keys with dots are stored with hyphens (dots → hyphens)
+        
+        Examples:
+            env="qa", app_key="myapp", property_key="database.host"
+            → "qa--myapp--database-host"
         """
         # Validate inputs contain only safe characters
         if not all(c.isalnum() or c in "-_." for c in env):
@@ -67,18 +69,17 @@ class KeyVaultService:
             raise ValueError(
                 f"Invalid characters in app_key: '{app_key}'. Only alphanumeric, hyphens, underscores, and dots allowed"
             )
+        if not all(c.isalnum() or c in "-_." for c in property_key):
+            raise ValueError(
+                f"Invalid characters in property_key: '{property_key}'. Only alphanumeric, hyphens, underscores, and dots allowed"
+            )
 
-        # Replace underscores and dots with hyphens for env and app_key
+        # Replace underscores and dots with hyphens for Azure Key Vault compatibility
         safe_env = env.replace("_", "-").replace(".", "-")
         safe_app_key = app_key.replace("_", "-").replace(".", "-")
+        safe_property_key = property_key.replace("_", "-").replace(".", "-")
 
-        # Use base64url encoding for property key to preserve ALL characters
-        # base64url is safe for URLs/filenames: uses - and _ instead of + and /
-        encoded_key = (
-            base64.urlsafe_b64encode(property_key.encode("utf-8")).decode("ascii").rstrip("=")
-        )  # Remove padding
-
-        secret_name = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}{encoded_key}"
+        secret_name = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}{safe_property_key}"
 
         # Azure Key Vault name limit
         if len(secret_name) > Config.MAX_SECRET_NAME_LENGTH:
@@ -88,22 +89,28 @@ class KeyVaultService:
 
         return secret_name
 
-    def _decode_property_key(self, encoded_key: str) -> str:
+    def _extract_property_key(self, secret_name: str, env: str, app_key: str) -> str:
         """
-        Decode base64url encoded property key back to original
-        Adds padding if needed and decodes from base64url
+        Extract the original property key from a secret name.
+        Reverse the transformation done in _generate_secret_name.
+        
+        Examples:
+            secret_name="qa--myapp--database-host", env="qa", app_key="myapp"
+            → "database.host"
         """
-        # Add padding if needed (base64 requires length to be multiple of 4)
-        padding = 4 - len(encoded_key) % 4
-        if padding != 4:
-            encoded_key += "=" * padding
-
-        try:
-            return base64.urlsafe_b64decode(encoded_key.encode("ascii")).decode("utf-8")
-        except Exception as e:
-            logger.warning(f"Failed to decode property key '{encoded_key}': {e}")
-            # Fallback for legacy keys (old format without base64 encoding)
-            return encoded_key.replace("-", ".")
+        # Build the prefix that was added
+        safe_env = env.replace("_", "-").replace(".", "-")
+        safe_app_key = app_key.replace("_", "-").replace(".", "-")
+        prefix = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
+        
+        # Remove prefix to get the safe property key
+        if secret_name.startswith(prefix):
+            safe_property_key = secret_name[len(prefix):]
+            # Reverse: hyphens back to dots
+            original_key = safe_property_key.replace("-", ".")
+            return original_key
+        
+        return secret_name
 
     @retry(
         stop=stop_after_attempt(Config.RETRY_MAX_ATTEMPTS),
@@ -126,7 +133,7 @@ class KeyVaultService:
             app_key: Application key identifier
 
         Returns:
-            Dictionary of property key-value pairs
+            Dictionary of property key-value pairs (original property keys only, no prefix)
         """
         cache_key = f"{env}:{app_key}"
 
@@ -146,22 +153,26 @@ class KeyVaultService:
         # Cache miss or expired - fetch from Key Vault
         logger.info(LogMessages.CACHE_MISS.format(cache_key=cache_key))
         properties = {}
+        
+        # Build prefix to match secrets for this env/app_key
+        safe_env = env.replace("_", "-").replace(".", "-")
+        safe_app_key = app_key.replace("_", "-").replace(".", "-")
+        prefix = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
 
         try:
             # List all secrets with the matching prefix
             secret_properties = self.client.list_properties_of_secrets()
 
             for secret_property in secret_properties:
-                try:
-                    secret = self.client.get_secret(secret_property.name)
-                    # Extract the encoded property key from the secret name
-                    encoded_property_key = secret_property.name
-                    # Decode base64url back to original property key
-                    original_key = self._decode_property_key(encoded_property_key)
-                    properties[original_key] = secret.value
-                except ResourceNotFoundError:
-                    logger.warning(f"Secret {secret_property.name} not found")
-                    continue
+                if secret_property.name.startswith(prefix):
+                    try:
+                        secret = self.client.get_secret(secret_property.name)
+                        # Extract the original property key (without env/app_key prefix)
+                        original_key = self._extract_property_key(secret_property.name, env, app_key)
+                        properties[original_key] = secret.value
+                    except ResourceNotFoundError:
+                        logger.warning(f"Secret {secret_property.name} not found")
+                        continue
 
             # Update cache with thread safety
             with self._cache_lock:
@@ -198,7 +209,7 @@ class KeyVaultService:
             properties: Dictionary of property key-value pairs to set
 
         Returns:
-            Dictionary of all properties after setting
+            Dictionary of all properties after setting (original property keys only)
         """
         try:
             for property_key, property_value in properties.items():
@@ -243,7 +254,11 @@ class KeyVaultService:
         Returns:
             Number of properties deleted
         """
-        prefix = f"{env}{Config.SECRET_NAME_SEPARATOR}{app_key}{Config.SECRET_NAME_SEPARATOR}"
+        # Build prefix for matching secrets
+        safe_env = env.replace("_", "-").replace(".", "-")
+        safe_app_key = app_key.replace("_", "-").replace(".", "-")
+        prefix = f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
+        
         deleted_count = 0
 
         try:
