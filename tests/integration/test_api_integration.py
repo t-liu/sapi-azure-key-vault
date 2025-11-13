@@ -279,7 +279,7 @@ class TestSecurePropertiesIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": secure_key,
+                    "keys": secure_key,
                     "properties": {
                         "api.client.id": "updated-client-789",
                         "api.client.secret": "updated-secret-012",
@@ -332,7 +332,7 @@ class TestSecurePropertiesIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": secure_key,
+                    "keys": secure_key,
                     "properties": {
                         "crm.client.id": "shared-client-id",
                         "crm.client.secret": "shared-secret",
