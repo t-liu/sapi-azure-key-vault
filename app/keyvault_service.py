@@ -193,7 +193,6 @@ class KeyVaultService:
         retry=retry_if_exception_type((ServiceRequestError, HttpResponseError)),
         reraise=True,
     )
-    
     def set_properties(self, env: str, app_key: str, properties: Dict[str, str]) -> Dict[str, str]:
         """
         Set multiple properties for a given environment and app key
@@ -238,7 +237,6 @@ class KeyVaultService:
         retry=retry_if_exception_type((ServiceRequestError, HttpResponseError)),
         reraise=True,
     )
-    
     def delete_properties(self, env: str, app_key: str) -> int:
         """
         Delete all properties for a given environment and app key
