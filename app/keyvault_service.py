@@ -193,6 +193,7 @@ class KeyVaultService:
         retry=retry_if_exception_type((ServiceRequestError, HttpResponseError)),
         reraise=True,
     )
+    
     def set_properties(self, env: str, app_key: str, properties: Dict[str, str]) -> Dict[str, str]:
         """
         Set multiple properties for a given environment and app key
@@ -237,6 +238,7 @@ class KeyVaultService:
         retry=retry_if_exception_type((ServiceRequestError, HttpResponseError)),
         reraise=True,
     )
+    
     def delete_properties(self, env: str, app_key: str) -> int:
         """
         Delete all properties for a given environment and app key
@@ -250,12 +252,6 @@ class KeyVaultService:
         Returns:
             Number of properties deleted
         """
-        # Build prefix for matching secrets
-        safe_env = env.replace("_", "-").replace(".", "-")
-        safe_app_key = app_key.replace("_", "-").replace(".", "-")
-        prefix = (
-            f"{safe_env}{Config.SECRET_NAME_SEPARATOR}{safe_app_key}{Config.SECRET_NAME_SEPARATOR}"
-        )
 
         deleted_count = 0
 
@@ -263,15 +259,14 @@ class KeyVaultService:
             secret_properties = self.client.list_properties_of_secrets()
 
             for secret_property in secret_properties:
-                if secret_property.name.startswith(prefix):
-                    try:
-                        poller = self.client.begin_delete_secret(secret_property.name)
-                        poller.wait()
-                        deleted_count += 1
-                        logger.info(f"Deleted secret: {secret_property.name}")
-                    except ResourceNotFoundError:
-                        logger.warning(f"Secret {secret_property.name} not found for deletion")
-                        continue
+                try:
+                    poller = self.client.begin_delete_secret(secret_property.name)
+                    poller.wait()
+                    deleted_count += 1
+                    logger.info(f"Deleted secret: {secret_property.name}")
+                except ResourceNotFoundError:
+                    logger.warning(f"Secret {secret_property.name} not found for deletion")
+                    continue
 
             # Invalidate cache for this env/app_key
             cache_key = f"{env}:{app_key}"

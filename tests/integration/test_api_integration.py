@@ -89,7 +89,7 @@ class TestAPIIntegration:
             "properties": [
                 {
                     "environment": test_env,
-                    "key": test_app_key,
+                    "keys": test_app_key,
                     "properties": {"initial.key": "initial.value"},
                 }
             ]

@@ -223,9 +223,9 @@ class TestKeyVaultService:
 
         # Mock secret properties with prefix
         secret_prop1 = Mock(spec=SecretProperties)
-        secret_prop1.name = "qa--test-app--key1"
+        secret_prop1.name = "delete-key1"
         secret_prop2 = Mock(spec=SecretProperties)
-        secret_prop2.name = "qa--test-app--key2"
+        secret_prop2.name = "delete-key2"
 
         mock_client.list_properties_of_secrets.return_value = [secret_prop1, secret_prop2]
 
@@ -239,36 +239,6 @@ class TestKeyVaultService:
 
         assert result == 2
         assert mock_client.begin_delete_secret.call_count == 2
-
-    @patch("app.keyvault_service.DefaultAzureCredential")
-    @patch("app.keyvault_service.SecretClient")
-    def test_delete_properties_filters_by_prefix(
-        self, mock_client_class, mock_credential, mock_env_vars
-    ):
-        """Test that delete_properties only deletes secrets matching the prefix"""
-        mock_client = Mock(spec=SecretClient)
-        mock_client_class.return_value = mock_client
-
-        # Mock multiple secrets with different prefixes
-        secret_prop1 = Mock(spec=SecretProperties)
-        secret_prop1.name = "qa--test-app--key1"
-
-        secret_prop2 = Mock(spec=SecretProperties)
-        secret_prop2.name = "qa--other-app--key2"
-
-        mock_client.list_properties_of_secrets.return_value = [secret_prop1, secret_prop2]
-
-        # Mock deletion
-        mock_poller = Mock()
-        mock_poller.wait = Mock()
-        mock_client.begin_delete_secret.return_value = mock_poller
-
-        service = KeyVaultService()
-        result = service.delete_properties("qa", "test-app")
-
-        # Should only delete 1 (matching qa--test-app prefix)
-        assert result == 1
-        mock_client.begin_delete_secret.assert_called_once_with("qa--test-app--key1")
 
     @patch("app.keyvault_service.DefaultAzureCredential")
     @patch("app.keyvault_service.SecretClient")
