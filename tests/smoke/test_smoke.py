@@ -100,7 +100,7 @@ class TestSmokeTests:
 
         assert response.headers.get("Content-Type") == "application/json"
 
-        body = json.loads(response.json())
+        body = response.json()
         assert "responses" in body
         assert isinstance(body["responses"], list)
 
@@ -114,7 +114,7 @@ class TestSmokeTests:
         )
 
         assert response.status_code == 401
-        body = json.loads(response.json())
+        body = response.json()
         assert "error" in body or "message" in body
 
     def test_response_time_acceptable(self, api_headers):
